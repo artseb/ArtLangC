@@ -1,0 +1,4 @@
+local Inner = import "mod_simple.art"
+local M = []
+M.deep = Inner.value + 57
+return M

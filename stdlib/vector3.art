@@ -1,0 +1,59 @@
+class Vector3 {
+    x = 0
+    y = 0
+    z = 0
+
+    fun Vector3(x, y, z) {
+        this.x = x
+        this.y = y
+        this.z = z
+    }
+
+    static fun zero() { return Vector3(0, 0, 0) }
+    static fun one() { return Vector3(1, 1, 1) }
+
+    static fun xAxis() { return Vector3(1, 0, 0) }
+    static fun yAxis() { return Vector3(0, 1, 0) }
+    static fun zAxis() { return Vector3(0, 0, 1) }
+
+    operator +(other: Vector3) { return Vector3(this.x + other.x, this.y + other.y, this.z + other.z) }
+    operator -(other: Vector3) { return Vector3(this.x - other.x, this.y - other.y, this.z - other.z) }
+    operator *(other: Vector3) { return Vector3(this.x * other.x, this.y * other.y, this.z * other.z) }
+    operator *(other: Number) { return Vector3(this.x * other, this.y * other, this.z * other) }
+    operator /(other: Vector3) { return Vector3(this.x / other.x, this.y / other.y, this.z / other.z) }
+    operator /(other: Number) { return Vector3(this.x / other, this.y / other, this.z / other) }
+
+    operator ==(other: Vector3) { return this.x == other.x and this.y == other.y and this.z == other.z }
+
+    fun dot(other: Vector3) { return this.x * other.x + this.y * other.y + this.z * other.z }
+
+    get magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z)
+    }
+
+    get normal() {
+        local length = this.magnitude
+        if (length == 0) { return Vector3.zero() }
+        return Vector3(this.x / length, this.y / length, this.z / length)
+    }
+
+    fun cross(other: Vector3) {
+        return Vector3(
+            this.y * other.z - this.z * other.y,
+            this.z * other.x - this.x * other.z,
+            this.x * other.y - this.y * other.x
+        )
+    }
+
+    fun clone() { return Vector3(this.x, this.y, this.z) }
+
+    fun isZero() { return this == Vector3.zero() }
+
+    fun toString() {
+        return "(" + tostring(this.x) + ", " +
+                    tostring(this.y) + ", " +
+                    tostring(this.z) + ")"
+    }
+}
+
+return Vector3

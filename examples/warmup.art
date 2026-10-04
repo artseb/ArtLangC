@@ -1,0 +1,56 @@
+// Warmup — loops, functions, and the higher-order table methods.
+//
+// Run:  ./bin/art examples/warmup.art
+
+// --- FizzBuzz ---
+
+fun fizzbuzz(n) {
+    if (n % 15 == 0) { return "FizzBuzz" }
+    if (n % 3 == 0)  { return "Fizz" }
+    if (n % 5 == 0)  { return "Buzz" }
+    return tostring(n)
+}
+
+for (local i = 1 -> 20) {
+    print(fizzbuzz(i))
+}
+
+// --- map / filter / reduce on the array part of a table ---
+
+print("")
+print("--- numbers ---")
+
+local nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+local evens = nums.filter(fun(n) { return n % 2 == 0 })
+local doubled = evens.map(fun(n) { return n * 2 })
+local total = doubled.reduce(fun(acc, n) { return acc + n }, 0)
+
+print("evens:   " + tostring(evens.length()))
+print("doubled: " + tostring(doubled.length()))
+print("total:   " + tostring(total))
+
+// --- a small ranking table ---
+
+print("")
+print("--- ranking ---")
+
+// Each row is [name, score]. Array part, so filter / sort work.
+local scores = [
+    ["Alice", 92],
+    ["Bob",   78],
+    ["Cara",  88],
+    ["Dave",  61],
+    ["Eve",   95]
+]
+
+local ranking = scores.clone()
+ranking.sort(fun(a, b) { return a[2] > b[2] })
+
+ranking.forEach(fun(row) {
+    print("  " + row[1] + "  " + tostring(row[2]))
+})
+
+// The 0.0 initial value forces floating-point so / doesn't floor.
+local avg = scores.reduce(fun(acc, row) { return acc + row[2] }, 0.0)
+                / scores.length()
+print("average: " + tostring(avg))

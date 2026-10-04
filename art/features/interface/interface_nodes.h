@@ -1,0 +1,7 @@
+#ifndef ART_INTERFACE_NODES_H
+#define ART_INTERFACE_NODES_H
+
+#define INTERFACE_NODES(X) \
+    X(INTERFACE_DECL)
+
+#endif

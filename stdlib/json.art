@@ -1,0 +1,334 @@
+// ============================================================
+// JSON — parse and serialize.
+//
+//   local data = JSON.parse(string)
+//   local text = JSON.to(value)
+//
+// Mapping:
+//   JSON null   <-> nil
+//   JSON true   <-> true
+//   JSON false  <-> false
+//   JSON number <-> int or float (Int if no '.', 'e', or 'E')
+//   JSON string <-> string
+//   JSON array  <-> table with only array part
+//   JSON object <-> table with any hash part
+//
+// Malformed input raises a runtime error. Wrap in attempt() for
+// soft failure.
+//
+// v1 limitation: \uXXXX escapes are not decoded.
+// ============================================================
+
+// ============================================================
+// Parser
+// ============================================================
+
+class JSONParser {
+    src = ""
+    pos = 1
+    len = 0
+
+    fun JSONParser(src) {
+        this.src = src
+        this.pos = 1
+        this.len = src.length()
+    }
+
+    fun peek() {
+        if (this.pos > this.len) { return "" }
+        return this.src.charAt(this.pos)
+    }
+
+    fun next() {
+        if (this.pos > this.len) { return "" }
+        local c = this.src.charAt(this.pos)
+        this.pos = this.pos + 1
+        return c
+    }
+
+    fun skipWs() {
+        while (this.pos <= this.len) {
+            local c = this.src.charAt(this.pos)
+            if (c == " " or c == "\t" or c == "\n" or c == "\r") {
+                this.pos = this.pos + 1
+            } else {
+                return
+            }
+        }
+    }
+
+    fun isDigit(c) {
+        if (c == "") { return false }
+        return "0123456789".contains(c)
+    }
+
+    fun parseValue() {
+        this.skipWs()
+        local c = this.peek()
+
+        if (c == "{") { return this.parseObject() }
+        if (c == "[") { return this.parseArray()  }
+        if (c == "\"") { return this.parseString() }
+        if (c == "t") { return this.parseTrue()   }
+        if (c == "f") { return this.parseFalse()  }
+        if (c == "n") { return this.parseNull()   }
+
+        return this.parseNumber()
+    }
+
+    fun parseTrue() {
+        if (this.src.substring(this.pos, this.pos + 4) != "true") {
+            error("JSON: expected 'true'")
+        }
+        this.pos = this.pos + 4
+        return true
+    }
+
+    fun parseFalse() {
+        if (this.src.substring(this.pos, this.pos + 5) != "false") {
+            error("JSON: expected 'false'")
+        }
+        this.pos = this.pos + 5
+        return false
+    }
+
+    fun parseNull() {
+        if (this.src.substring(this.pos, this.pos + 4) != "null") {
+            error("JSON: expected 'null'")
+        }
+        this.pos = this.pos + 4
+        return nil
+    }
+
+    fun parseNumber() {
+        local start = this.pos
+        local isFloat = false
+        local sawDigit = false
+
+        if (this.peek() == "-") { this.pos = this.pos + 1 }
+
+        while (this.isDigit(this.peek())) {
+            this.pos = this.pos + 1
+            sawDigit = true
+        }
+
+        if (this.peek() == ".") {
+            isFloat = true
+            this.pos = this.pos + 1
+            while (this.isDigit(this.peek())) {
+                this.pos = this.pos + 1
+                sawDigit = true
+            }
+        }
+
+        if (this.peek() == "e" or this.peek() == "E") {
+            isFloat = true
+            this.pos = this.pos + 1
+            if (this.peek() == "+" or this.peek() == "-") {
+                this.pos = this.pos + 1
+            }
+            while (this.isDigit(this.peek())) {
+                this.pos = this.pos + 1
+                sawDigit = true
+            }
+        }
+
+        if (!sawDigit) {
+            error("JSON: expected number at position " + tostring(start))
+        }
+
+        local raw = this.src.substring(start, this.pos)
+        if (isFloat) { return raw.toFloat() }
+        return raw.toInt()
+    }
+
+    fun parseString() {
+        this.next()   // opening quote
+
+        local out = ""
+        while (this.pos <= this.len) {
+            local c = this.next()
+
+            if (c == "\"") { return out }
+
+            if (c == "\\") {
+                local e = this.next()
+                if (e == "n") { out = out + "\n" }
+                else if (e == "t") { out = out + "\t" }
+                else if (e == "r") { out = out + "\r" }
+                else if (e == "\"") { out = out + "\"" }
+                else if (e == "\\") { out = out + "\\" }
+                else if (e == "/") { out = out + "/" }
+                else { error("JSON: bad escape '\\" + e + "'") }
+            } else {
+                out = out + c
+            }
+        }
+        error("JSON: unterminated string")
+    }
+
+    fun parseArray() {
+        this.next()   // [
+        local arr = []
+
+        this.skipWs()
+        if (this.peek() == "]") {
+            this.next()
+            return arr
+        }
+
+        while (true) {
+            local v = this.parseValue()
+            arr.push(v)
+
+            this.skipWs()
+            if (this.peek() == ",") {
+                this.next()
+                continue
+            }
+            if (this.peek() == "]") {
+                this.next()
+                return arr
+            }
+            error("JSON: expected ',' or ']'")
+        }
+    }
+
+    fun parseObject() {
+        this.next()   // {
+        local obj = []
+
+        this.skipWs()
+        if (this.peek() == "}") {
+            this.next()
+            return obj
+        }
+
+        while (true) {
+            this.skipWs()
+            if (this.peek() != "\"") {
+                error("JSON: expected string key")
+            }
+
+            local key = this.parseString()
+
+            this.skipWs()
+            if (this.peek() != ":") {
+                error("JSON: expected ':' after key")
+            }
+            this.next()
+
+            local value = this.parseValue()
+            obj[key] = value
+
+            this.skipWs()
+            if (this.peek() == ",") {
+                this.next()
+                continue
+            }
+            if (this.peek() == "}") {
+                this.next()
+                return obj
+            }
+            error("JSON: expected ',' or '}'")
+        }
+    }
+}
+
+// ============================================================
+// Writer
+// ============================================================
+
+class JSONWriter {
+    fun JSONWriter() { }
+
+    fun writeString(s) {
+        local out = "\""
+        local i = 1
+        while (i <= s.length()) {
+            local c = s.charAt(i)
+            if (c == "\"") { out = out + "\\\"" }
+            else if (c == "\\") { out = out + "\\\\" }
+            else if (c == "\n") { out = out + "\\n" }
+            else if (c == "\t") { out = out + "\\t" }
+            else if (c == "\r") { out = out + "\\r" }
+            else { out = out + c }
+            i = i + 1
+        }
+        return out + "\""
+    }
+
+    // A table is serialized as an object if it has any hash entries,
+    // otherwise as an array.
+    fun isObject(t) {
+        local arrLen = t.length()
+        local total  = t.keys().length()
+        return total > arrLen
+    }
+
+    fun writeArray(t) {
+        local out = "["
+        local i = 1
+        local n = t.length()
+        while (i <= n) {
+            if (i > 1) { out = out + "," }
+            out = out + this.write(t[i])
+            i = i + 1
+        }
+        return out + "]"
+    }
+
+    fun writeObject(t) {
+        local out = "{"
+        local n = t.length()
+        local allKeys = t.keys()      // [1..n] + string keys
+        local ki = n + 1              // skip array indices
+        local first = true
+
+        while (ki <= allKeys.length()) {
+            local key = allKeys[ki]
+            if (!first) { out = out + "," }
+            first = false
+            out = out + this.writeString(tostring(key))
+            out = out + ":"
+            out = out + this.write(t[key])
+            ki = ki + 1
+        }
+        return out + "}"
+    }
+
+    fun write(v) {
+        if (v == nil)      { return "null" }
+        if (v is Bool)     { if (v) { return "true" } return "false" }
+        if (v is Number)   { return tostring(v) }
+        if (v is String)   { return this.writeString(v) }
+        if (v is Table) {
+            if (this.isObject(v)) { return this.writeObject(v) }
+            return this.writeArray(v)
+        }
+        error("JSON: cannot serialize " + tostring(v))
+    }
+}
+
+// ============================================================
+// Public surface
+// ============================================================
+
+local JSON = []
+
+JSON.parse = fun(s) {
+    local p = JSONParser(s)
+    local v = p.parseValue()
+    p.skipWs()
+    if (p.pos <= p.len) {
+        error("JSON: trailing characters at position " + tostring(p.pos))
+    }
+    return v
+}
+
+JSON.to = fun(v) {
+    local w = JSONWriter()
+    return w.write(v)
+}
+
+return JSON

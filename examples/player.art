@@ -1,0 +1,34 @@
+interface Speaker {
+    fun speak()
+}
+
+class Actor implements Speaker {
+    name = "actor"
+
+    fun Actor(name) {
+        this.name = name
+    }
+
+    fun speak() {
+        print(this.name + ": hello!")
+    }
+}
+
+class Player extends Actor {
+    fun Player() {
+        super("player")
+    }
+}
+
+local actor = Actor("fred")
+
+local player = Player()
+player.speak()
+
+print(player is Actor)
+print(Actor is Player)
+print(actor is Actor)
+print(actor is Player)
+print "---"
+print(actor is Speaker)
+print(player is Speaker)

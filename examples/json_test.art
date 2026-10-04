@@ -1,0 +1,18 @@
+local JSON = import "../stdlib/json.art"
+
+local src = "{\"name\":\"player\",\"hp\":100,\"alive\":true,\"items\":[\"sword\",\"shield\"],\"pos\":{\"x\":3,\"y\":7}}"
+
+local ok, config = attempt(fun() { return JSON.parse(src) })
+
+if (!ok) {
+    print("parse failed: " + config)
+    return
+}
+
+print(config.name)
+print(config.hp)
+print(config.alive)
+print(config.items[1])
+print(config.pos.x + config.pos.y)
+
+print(JSON.to(config))

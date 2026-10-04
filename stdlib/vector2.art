@@ -1,0 +1,31 @@
+class Vector2 {
+    x = 0
+    y = 0
+
+    fun Vector2(x, y) {
+        this.x = x
+        this.y = y
+    }
+
+    static fun xAxis() { return Vector2(1, 0) }
+    static fun yAxis() { return Vector2(0, 1) }
+
+    operator +(other: Vector2) { return Vector2(this.x + other.x, this.y + other.y) }
+    operator -(other: Vector2) { return Vector2(this.x - other.x, this.y - other.y) }
+    operator *(other: Vector2) { return Vector2(this.x * other.x, this.y * other.y) }
+    operator *(other: Number) { return Vector2(this.x * other, this.y * other) }
+    operator /(other: Vector2) { return Vector2(this.x / other.x, this.y / other.y) }
+    operator /(other: Number) { return Vector2(this.x / other, this.y / other) }
+
+    operator ==(other: Vector2) { return this.x == other.x and this.y == other.y }
+
+    get magnitude() { return Math.sqrt(this.x * this.x + this.y * this.y) }
+
+    get normal() {
+        local length = this.magnitude
+        if (length == 0) { return Vector2(0, 0) }
+        return Vector2(this.x / length, this.y / length)
+    }
+}
+
+return Vector2

@@ -1,0 +1,39 @@
+# Build artifacts
+bin/
+*.o
+*.d
+*.a
+*.lib
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# CMake
+build/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+*.vcxproj*
+*.sln
+*.xcodeproj/
+*.xcworkspace/
+
+# Test run artifacts. tests/test_class_eval.c writes these on
+# every run; they're regenerated, not source.
+tests/tmp/*.txt
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

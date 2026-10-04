@@ -1,0 +1,63 @@
+interface Describable {
+    fun describe()
+}
+
+class Item implements Describable {
+    static made = 0
+
+    name
+    price
+
+    fun Item(name, price) {
+        this.name = name
+        this.price = price
+        Item.made = Item.made + 1
+    }
+
+    static fun free(name) {
+        return Item(name, 0)
+    }
+
+    fun describe() {
+        return "${this.name} (${this.price}g)"
+    }
+
+    fun toString() {
+        return this.describe()
+    }
+}
+
+local shop = [Item("Sword", 120), Item("Rope", 15), Item.free("Pebble")]
+
+shop.push(Item("Shield", 80))
+shop.sort(fun(a, b) { return a.price < b.price })
+
+print("stock: ${shop.length()} of ${Item.made} items ever made")
+
+// for-in over a table walks both halves: the array part first
+// (keys are 1..n), then the hash part. `shop` is purely array.
+for (local index, item in shop) {
+    print("  ${index}. ${item.describe()}")
+}
+
+local names  = shop.map(fun(item) { return item.name })
+local pricey = shop.filter(fun(item) { return item.price > 50 })
+local total  = shop.reduce(fun(sum, item) { return sum + item.price }, 0)
+local rope   = shop.find(fun(item) { return item.name == "Rope" })
+
+print("names: ${names.join(", ")}")
+print("pricey: ${pricey.length()}, total: ${total}g, rope costs ${rope.price}g")
+
+// slice(1, 2) is 1-based and inclusive on both ends. The map
+// returns a table of names; join renders it as text.
+print("cheapest two: ${shop.slice(1, 2).map(fun(item) { return item.name }).join(" & ")}")
+
+local stats = ["hp" = 30, "mp" = 12]
+print("stats keys:   ${stats.keys().join(", ")}")
+print("stats values: ${stats.values().join(", ")}")
+
+local queue = [1, 2, 3]
+queue.insert(1, 0)      // [0, 1, 2, 3]
+queue.remove(4)         // removes the value at index 4 (which is 3)
+queue.reverse()         // [2, 1, 0]
+print("queue: ${queue.join(", ")}, has 2: ${queue.contains(2)}, at ${queue.indexOf(2)}")
