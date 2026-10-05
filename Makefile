@@ -13,12 +13,12 @@
 
 CC      ?= gcc
 CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter -g -O0 -MMD -MP \
-           -Iart \
-           -Iart/core/runtime \
-           -Iart/core/syntax \
-           -Iart/core/syntax/parser \
-           -Iart/core/interp \
-           -Iart/features
+           -iquoteart \
+           -iquoteart/core/runtime \
+           -iquoteart/core/syntax \
+           -iquoteart/core/syntax/parser \
+           -iquoteart/core/interp \
+           -iquoteart/features
 LDFLAGS := -lm
 
 # --- Stale-file guard ----------------------------------------
@@ -97,7 +97,7 @@ test: all
 	for t in $(TEST_BIN); do \
 	    echo "=== $$t ==="; \
 	    ./$$t; \
-	done
+done
 	@echo
 	@echo "All test binaries passed."
 
