@@ -7,7 +7,7 @@
 #include "state.h"
 
 #define PARSER_MAX_ERRORS 20
-#define PARSER_MAX_DEPTH 256
+#define PARSER_MAX_DEPTH 500
 
 typedef struct Parser
 {

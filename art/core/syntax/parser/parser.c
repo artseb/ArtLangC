@@ -47,6 +47,13 @@ Node *parse_source(ArtState *S, const char *source, int length,
     {
         int saved_pos = P.lexer.current;
 
+        // Reset the depth counter at each top-level statement.
+        // A leak in parse_precedence would otherwise accumulate
+        // across the file until the guard fires on legitimate
+        // code. This bounds the worst case to a single
+        // statement's nesting depth.
+        P.depth = 0;
+
         if (count >= cap)
         {
             cap *= 2;
