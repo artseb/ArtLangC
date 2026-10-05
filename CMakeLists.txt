@@ -51,14 +51,28 @@ file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/test_*.c)
 
 add_library(art_lib STATIC ${CORE_SRC})
 
-target_include_directories(art_lib PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/art
-    ${CMAKE_CURRENT_SOURCE_DIR}/art/core/runtime
-    ${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax
-    ${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax/parser
-    ${CMAKE_CURRENT_SOURCE_DIR}/art/core/interp
-    ${CMAKE_CURRENT_SOURCE_DIR}/art/features
-)
+if(MSVC)
+    target_include_directories(art_lib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/art
+        ${CMAKE_CURRENT_SOURCE_DIR}/art/core/runtime
+        ${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax
+        ${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax/parser
+        ${CMAKE_CURRENT_SOURCE_DIR}/art/core/interp
+        ${CMAKE_CURRENT_SOURCE_DIR}/art/features
+    )
+else()
+    # Use -iquote instead of -I. This keeps project headers available
+    # to #include "..." without allowing art/features/features.h to
+    # shadow glibc's <features.h> on Unix.
+    target_compile_options(art_lib PUBLIC
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art/core/runtime
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art/core/syntax/parser
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art/core/interp
+        -iquote${CMAKE_CURRENT_SOURCE_DIR}/art/features
+    )
+endif()
 
 # libm is separate on Linux and glibc-based systems. It's part
 # of libc on macOS and Windows, so the link line is a no-op there.
