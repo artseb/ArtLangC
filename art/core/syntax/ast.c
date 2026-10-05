@@ -235,12 +235,23 @@ Node *node_table(int line, int col,
     return (Node *)n;
 }
 
-Node *node_interp(int line, int col, Node **parts, int count)
+Node *node_interp(int line, int col, Node **parts, ObjString **specs, int count)
 {
     InterpNode *n = (InterpNode *)ast_alloc_node(
         sizeof(InterpNode), NODE_INTERP, line, col, true);
     n->parts = ast_copy_node_array(parts, count);
     n->part_count = count;
+
+    if (specs != NULL && count > 0)
+    {
+        n->specs = malloc(sizeof(ObjString *) * count);
+        memcpy(n->specs, specs, sizeof(ObjString *) * count);
+    }
+    else
+    {
+        n->specs = NULL;
+    }
+
     return (Node *)n;
 }
 

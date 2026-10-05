@@ -318,6 +318,7 @@ static Node *parse_interp_string(Parser *P, Token t)
 
     int cap = 8, count = 0;
     Node **parts = malloc(sizeof(Node *) * cap);
+    ObjString **specs = malloc(sizeof(ObjString *) * cap);
 
     char *buf = malloc(len + 1);
     int buf_len = 0;
@@ -344,56 +345,114 @@ static Node *parse_interp_string(Parser *P, Token t)
                 {
                     cap *= 2;
                     parts = realloc(parts, sizeof(Node *) * cap);
+                    specs = realloc(specs, sizeof(ObjString *) * cap);
                 }
-                parts[count++] = node_literal(t.line, t.column, OBJ_VAL(seg));
+                parts[count] = node_literal(t.line, t.column, OBJ_VAL(seg));
+                specs[count] = NULL;
+                count++;
                 buf_len = 0;
             }
 
+            // Scan for the matching `}` while tracking string
+            // state, and remember the first top-level `:` as the
+            // spec separator. Nested `{...}` bumps depth; a `:`
+            // at depth 1 (relative to the `${`) is the separator.
             int expr_start = i + 2;
             int j = expr_start;
             int depth = 1;
+            int colon_at = -1;
+            bool in_str = false;
+
             while (j < len && depth > 0)
             {
-                if (src[j] == '\\')
+                char d = src[j];
+
+                if (in_str)
+                {
+                    if (d == '\\' && j + 1 < len)
+                    {
+                        j += 2;
+                        continue;
+                    }
+                    if (d == '"')
+                        in_str = false;
+                    j++;
+                    continue;
+                }
+
+                if (d == '\\' && j + 1 < len)
                 {
                     j += 2;
                     continue;
                 }
-                if (src[j] == '{')
+                if (d == '"')
+                {
+                    in_str = true;
+                    j++;
+                    continue;
+                }
+
+                if (d == '{')
+                {
                     depth++;
-                else if (src[j] == '}')
+                }
+                else if (d == '}')
+                {
                     depth--;
-                if (depth == 0)
-                    break;
+                    if (depth == 0)
+                        break;
+                }
+                else if (d == ':' && depth == 1 && colon_at < 0)
+                {
+                    colon_at = j;
+                }
                 j++;
             }
+
             if (depth != 0)
             {
                 parser_error_at(P, &t, "unterminated interpolation");
                 for (int k = 0; k < count; k++)
                     node_free_tree(&parts[k]);
                 free(parts);
+                free(specs);
                 free(buf);
                 return NULL;
             }
 
+            int expr_end = (colon_at >= 0) ? colon_at : j;
+
             Node *expr = parse_substring_expression(P, src + expr_start,
-                                                    j - expr_start, t);
+                                                    expr_end - expr_start, t);
             if (expr == NULL)
             {
                 for (int k = 0; k < count; k++)
                     node_free_tree(&parts[k]);
                 free(parts);
+                free(specs);
                 free(buf);
                 return NULL;
+            }
+
+            ObjString *spec = NULL;
+            if (colon_at >= 0)
+            {
+                int spec_start = colon_at + 1;
+                int spec_len = j - spec_start;
+                spec = obj_string_from_utf8(P->state,
+                                            src + spec_start, spec_len);
             }
 
             if (count >= cap)
             {
                 cap *= 2;
                 parts = realloc(parts, sizeof(Node *) * cap);
+                specs = realloc(specs, sizeof(ObjString *) * cap);
             }
-            parts[count++] = expr;
+            parts[count] = expr;
+            specs[count] = spec;
+            count++;
+
             i = j + 1;
             continue;
         }
@@ -409,23 +468,33 @@ static Node *parse_interp_string(Parser *P, Token t)
         {
             cap *= 2;
             parts = realloc(parts, sizeof(Node *) * cap);
+            specs = realloc(specs, sizeof(ObjString *) * cap);
         }
-        parts[count++] = node_literal(t.line, t.column, OBJ_VAL(seg));
+        parts[count] = node_literal(t.line, t.column, OBJ_VAL(seg));
+        specs[count] = NULL;
+        count++;
     }
 
     free(buf);
 
-    Node *result = node_interp(t.line, t.column, parts, count);
+    Node *result = node_interp(t.line, t.column, parts, specs, count);
     free(parts);
+    free(specs);
     return result;
 }
 
 static Node *parse_precedence(Parser *P, int min_lb)
 {
+    if (!parser_enter(P))
+        return NULL;
+
     parser_advance(P);
     Node *left = parse_prefix(P, P->previous.type);
     if (left == NULL)
+    {
+        parser_leave(P);
         return NULL;
+    }
 
     for (;;)
     {
@@ -469,6 +538,7 @@ static Node *parse_precedence(Parser *P, int min_lb)
             if (right == NULL)
             {
                 node_free_tree(&left);
+                parser_leave(P);
                 return NULL;
             }
             left = node_binary(op_tok.line, op_tok.column,
@@ -476,7 +546,10 @@ static Node *parse_precedence(Parser *P, int min_lb)
         }
 
         if (left == NULL)
+        {
+            parser_leave(P);
             return NULL;
+        }
     }
 
     return left;

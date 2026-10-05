@@ -1,5 +1,5 @@
 // ============================================================
-// misc_builtins.c — print, tostring, error, attempt
+// misc_builtins.c — print, tostring, error, attempt, assert
 // ============================================================
 
 #include <stdio.h>
@@ -43,6 +43,33 @@ static Value builtin_error(ArtState *S, int argc, Value *argv)
 
     char *msg = obj_string_to_utf8(AS_STRING(argv[0]));
     art_runtime_error(S, S->current_node, "%s", msg);
+    return NIL_VAL;
+}
+
+// assert(cond) or assert(cond, message)
+//
+// Raises a runtime error when cond is falsy. The optional second
+// argument is a message string included in the error output.
+// Intended for invariants — things that should never happen.
+// Unlike error(), which is for recoverable user-facing failures,
+// assert() reads as "this is a bug if it fires".
+static Value builtin_assert(ArtState *S, int argc, Value *argv)
+{
+    if (argc < 1)
+        art_runtime_error(S, S->current_node,
+                          "assert expects at least one argument");
+
+    if (!value_is_falsy(argv[0]))
+        return NIL_VAL;
+
+    if (argc >= 2 && IS_STRING(argv[1]))
+    {
+        char *msg = obj_string_to_utf8(AS_STRING(argv[1]));
+        art_runtime_error(S, S->current_node,
+                          "assertion failed: %s", msg);
+    }
+
+    art_runtime_error(S, S->current_node, "assertion failed");
     return NIL_VAL;
 }
 
@@ -121,6 +148,7 @@ static void misc_register_builtins(ArtState *S)
     art_define_native(S, S->global_scope->vars, "print",    builtin_print,    -1);
     art_define_native(S, S->global_scope->vars, "tostring", builtin_tostring,  1);
     art_define_native(S, S->global_scope->vars, "error",    builtin_error,     1);
+    art_define_native(S, S->global_scope->vars, "assert",   builtin_assert,   -1);
     art_define_native(S, S->global_scope->vars, "attempt",  builtin_attempt,  -1);
 }
 

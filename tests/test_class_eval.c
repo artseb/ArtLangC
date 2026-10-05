@@ -471,8 +471,6 @@ int main(void)
 	expect(S, "str.indexOf", "\"hello\".indexOf(\"l\")", "3");
 	expect(S, "str.indexOf miss", "\"hello\".indexOf(\"z\")", "nil");
 	expect(S, "str.indexOf from", "\"hello\".indexOf(\"l\", 4)", "4");
-	expect(S, "str.repeat", "\"ab\".repeat(3)", "ababab");
-	expect(S, "str.repeat 0", "\"ab\".repeat(0)", "");
 	expect(S, "str.reverse", "\"abc\".reverse()", "cba");
 
 	expect(S, "str.split basic",

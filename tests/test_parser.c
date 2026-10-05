@@ -251,6 +251,8 @@ static void print_node(Node *n, int depth)
     }
     case NODE_TYPE_COUNT:
         break;
+    default:
+        break;
     }
 }
 

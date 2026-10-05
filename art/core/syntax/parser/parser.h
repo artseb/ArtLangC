@@ -7,6 +7,7 @@
 #include "state.h"
 
 #define PARSER_MAX_ERRORS 20
+#define PARSER_MAX_DEPTH 256
 
 typedef struct Parser
 {
@@ -21,6 +22,7 @@ typedef struct Parser
     bool panic_mode;
     bool in_switch_case;
     int paren_depth;
+    int depth; // recursion depth in parse_precedence
 } Parser;
 
 void parser_init(ArtState *S);
@@ -40,11 +42,14 @@ void parser_error(Parser *P, const char *fmt, ...);
 void parser_error_at(Parser *P, Token *tok, const char *fmt, ...);
 void parser_synchronize(Parser *P);
 
+// Depth tracking for recursive descent. parser_enter returns
+// false and raises an error when the limit is exceeded;
+// parser_leave must be called symmetrically.
+bool parser_enter(Parser *P);
+void parser_leave(Parser *P);
+
 ObjString *parser_token_to_string(Parser *P, Token *tok);
 
-// True if the token, when it opens a new line, continues the
-// previous expression instead of starting a new statement.
-// Defined in parse_helpers.c.
 bool token_continues_expression(TokenType t);
 
 Node *parse_expression(Parser *P);
@@ -59,10 +64,6 @@ ObjFunction *parse_function_body(Parser *P, ObjString *name,
                                  ObjString **params, int param_count,
                                  bool variadic);
 
-// Unified `if` parser. Called from parse_prefix when the parser
-// sees TOKEN_IF in any position. Handles both the statement form
-// (`if (c) { ... } else { ... }`) and the expression form
-// (`if (c) -> a else b`). Defined in parse_expr.c.
 Node *parse_if_any(Parser *P);
 
 #endif // ART_PARSER_H

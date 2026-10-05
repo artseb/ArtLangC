@@ -117,13 +117,17 @@ Standard library modules written in ART, in `stdlib/`.
 ## Architecture
 
 - `art/core/runtime/` — Value, Obj, GC, ArtState, registration helpers
-- `art/core/syntax/` — lexer, parser, AST
-- `art/core/interp/` — the tree-walking evaluator
+- `art/core/syntax/` — lexer, parser, AST, pattern engine
+- `art/core/interp/` — the tree-walking evaluator, format specs
 - `art/features/` — one folder per language feature
 - `art/builtins.h` — compatibility shim (the builtins/ folder was
   dissolved; every builtin is now a feature)
 
-See `REFACTOR_STATUS.md` for details.
+## Language reference
+
+`CHANGELOG.md` documents every language feature with examples.
+It's the authoritative answer to "does ART have X". If you're
+looking for syntax, start there.
 
 ## Building
 

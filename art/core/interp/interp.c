@@ -1,10 +1,16 @@
 // ============================================================
 // interp.c — eval dispatch loop + embed entry points
+//
+// The interrupt check lives at the top of art_eval. Every node
+// evaluation goes through here, so a runaway `while (true) {}`
+// in user code hits the check on the next iteration and unwinds
+// cleanly via the normal longjmp path.
 // ============================================================
 
 #include "interp.h"
 #include "scope.h"
 #include "parser.h"
+#include "interrupt.h"
 #include "features/features.h"
 
 #include <stdio.h>
@@ -75,6 +81,14 @@ Value art_eval(ArtState *S, Node *n)
     if (n == NULL)
         return NIL_VAL;
 
+    // Interrupt check on the hottest path in the interpreter.
+    // Cleared before raising so the next run starts fresh.
+    if (art_interrupt_pending())
+    {
+        art_clear_interrupt();
+        art_runtime_error(S, n, "interrupted");
+    }
+
     FEATURES_FOR_EACH(f)
     {
         if (f->eval_node == NULL)
@@ -124,6 +138,10 @@ Value art_run_ast(ArtState *S, Node *program)
 Value art_run_source(ArtState *S, const char *source, int length,
                      const char *file_name)
 {
+    // A stale interrupt from a previous run would fire on the
+    // first node. Clear it before starting.
+    art_clear_interrupt();
+
     S->last_error = false;
 
     const char *saved_file = S->current_file;
@@ -155,11 +173,6 @@ Value art_run_source(ArtState *S, const char *source, int length,
     }
     else
     {
-        // Error path. Reset every field a longjmp could have left
-        // partially mutated. active_class is easy to forget — if
-        // it isn't cleared here, the next REPL line runs with the
-        // previous method's class still active, so privacy checks
-        // and `super` see the wrong owner.
         S->error_frame = fp->prev;
         S->scope = S->global_scope;
         S->active_class = NULL;

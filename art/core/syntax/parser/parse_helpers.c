@@ -14,6 +14,29 @@ void parser_set_suppress(bool on)
     g_suppress_errors = on;
 }
 
+// Depth guard for recursive descent. Called at the top of
+// parse_precedence (the main recursion site) and any other
+// function that can recurse on user input. The limit is high
+// enough that legitimate nesting works and low enough that a
+// pathological input can't blow the C stack before we catch it.
+bool parser_enter(Parser *P)
+{
+    if (P->depth >= PARSER_MAX_DEPTH)
+    {
+        parser_error(P, "expression nesting too deep (max %d)",
+                     PARSER_MAX_DEPTH);
+        return false;
+    }
+    P->depth++;
+    return true;
+}
+
+void parser_leave(Parser *P)
+{
+    if (P->depth > 0)
+        P->depth--;
+}
+
 void parser_advance(Parser *P)
 {
     P->previous = P->current;
@@ -59,13 +82,6 @@ Token parser_consume(Parser *P, TokenType type, const char *message)
     return P->current;
 }
 
-// Tokens that, at the start of a new line, continue the previous
-// expression instead of terminating it. Binary operators that
-// can't double as prefixes, plus `.` for member access.
-//
-// `-` is included even though it can be a prefix. The common case
-// is a split subtraction across lines; a bare `-expr` statement
-// is rare enough to be a non-concern.
 bool token_continues_expression(TokenType t)
 {
     switch (t)
@@ -139,10 +155,18 @@ void parser_error(Parser *P, const char *fmt, ...)
     va_end(args);
 }
 
+// Skip tokens until we're probably at a statement boundary.
+// The `previous` check catches the case where we just consumed
+// a semicolon; the switch catches natural statement starts.
+//
+// The loop always terminates: it breaks on EOF, on a stop token
+// at the current position, or by advancing. If nothing else
+// fires, it advances past a token on each iteration.
 void parser_synchronize(Parser *P)
 {
     P->panic_mode = false;
     P->paren_depth = 0;
+    P->depth = 0;
 
     while (P->current.type != TOKEN_EOF)
     {

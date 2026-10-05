@@ -141,10 +141,13 @@ static void free_children(Node *n)
     }
     case NODE_INTERP:
     {
-        InterpNode *t= (InterpNode *)n;
+        InterpNode *t = (InterpNode *)n;
         for (int i = 0; i < t->part_count; i++)
             node_free_tree(&t->parts[i]);
         free(t->parts);
+        // specs are interned ObjStrings, GC-managed. Only the
+        // parallel array itself needs freeing.
+        free(t->specs);
         break;
     }
     case NODE_MULTI_DECL:

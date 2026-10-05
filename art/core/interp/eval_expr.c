@@ -4,6 +4,7 @@
 
 #include "interp.h"
 #include "scope.h"
+#include "format.h"
 #include "features/features.h"
 
 #include <math.h>
@@ -227,11 +228,18 @@ Value eval_interp(ArtState *S, Node *n)
     {
         Value v = art_eval(S, in->parts[i]);
         if (S->control != CONTROL_NONE)
-        {
             return NIL_VAL;
-        }
 
-        ObjString *s = value_to_string(S, v);
+        ObjString *s;
+        if (in->specs != NULL && in->specs[i] != NULL)
+            s = format_value(S, v, in->specs[i]);
+        else
+            s = value_to_string(S, v);
+
+        // format_value can raise on a bad spec; the control
+        // flag is the signal that we should unwind.
+        if (S->control != CONTROL_NONE)
+            return NIL_VAL;
 
         if (result == NULL)
             result = s;

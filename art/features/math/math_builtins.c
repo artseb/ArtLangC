@@ -49,9 +49,12 @@ static Value math_ceil(ArtState *S, int argc, Value *argv)
 }
 static Value math_round(ArtState *S, int argc, Value *argv)
 {
-    (void)S; (void)argc;
-    if (IS_INT(argv[0])) return argv[0];
-    return FLOAT_VAL(round(AS_NUMBER(argv[0])));
+    (void)S;
+    (void)argc;
+    if (IS_INT(argv[0]))
+        return argv[0];
+    double v = AS_FLOAT(argv[0]);
+    return FLOAT_VAL(v >= 0.0 ? floor(v + 0.5) : ceil(v - 0.5));
 }
 static Value math_trunc(ArtState *S, int argc, Value *argv)
 {

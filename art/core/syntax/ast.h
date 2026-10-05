@@ -209,10 +209,14 @@ typedef struct TableNode
     int hash_count;
 } TableNode;
 
+// Two parallel arrays: parts and, for expression parts only, an
+// optional format spec. specs[i] is NULL when part i has no spec
+// (literals never do). Both arrays have part_count entries.
 typedef struct InterpNode
 {
     Node base;
     Node **parts;
+    ObjString **specs;
     int part_count;
 } InterpNode;
 
@@ -255,7 +259,7 @@ Node *node_fun_decl(int line, int col, ObjFunction *fn);
 Node *node_table(int line, int col,
                  Node **array_items, int array_count,
                  ObjString **hash_keys, Node **hash_values, int hash_count);
-Node *node_interp(int line, int col, Node **parts, int count);
+Node *node_interp(int line, int col, Node **parts, ObjString **specs, int count);
 Node *node_multi_decl(int line, int col, ObjString **names, int name_count,
                       Node *value, uint32_t flags);
 

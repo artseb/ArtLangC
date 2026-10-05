@@ -114,7 +114,9 @@ Value eval_index(ArtState *S, Node *n)
         return NIL_VAL;
 
     if (!IS_TABLE(target))
-        art_runtime_error(S, n, "cannot index %s", value_type_name(target));
+        art_runtime_error(S, n, "cannot index %s with %s",
+                          value_type_name(target),
+                          value_type_name(idx));
 
     return table_index_get(S, AS_TABLE(target), idx, n);
 }
@@ -193,7 +195,8 @@ Value eval_member(ArtState *S, Node *n)
     }
 
     if (!IS_TABLE(target))
-        art_runtime_error(S, n, "cannot access member on %s",
+        art_runtime_error(S, n, "cannot access member '%s' on %s",
+                          obj_string_to_utf8(m->name),
                           value_type_name(target));
     return table_get(AS_TABLE(target), m->name);
 }
@@ -233,7 +236,8 @@ Value eval_assign_member(ArtState *S, Node *n, TokenType binop)
         {
             if (!IS_TABLE(target))
                 art_runtime_error(S, a->target,
-                                  "cannot assign member on %s",
+                                  "cannot assign member '%s' on %s",
+                                  obj_string_to_utf8(m->name),
                                   value_type_name(target));
             cur = table_get(AS_TABLE(target), m->name);
         }
@@ -261,7 +265,8 @@ Value eval_assign_member(ArtState *S, Node *n, TokenType binop)
         return out;
 
     if (!IS_TABLE(target))
-        art_runtime_error(S, a->target, "cannot assign member on %s",
+        art_runtime_error(S, a->target, "cannot assign member '%s' on %s",
+                          obj_string_to_utf8(m->name),
                           value_type_name(target));
 
     if (AS_TABLE(target)->frozen)
@@ -284,8 +289,10 @@ Value eval_assign_index(ArtState *S, Node *n, TokenType binop)
         return NIL_VAL;
 
     if (!IS_TABLE(target))
-        art_runtime_error(S, a->target, "cannot index-assign on %s",
-                          value_type_name(target));
+        art_runtime_error(S, a->target,
+                          "cannot index-assign on %s with %s",
+                          value_type_name(target),
+                          value_type_name(idx));
 
     ObjTable *t = AS_TABLE(target);
     Value rhs;

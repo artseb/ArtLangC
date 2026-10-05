@@ -2,6 +2,7 @@
 // string_methods.c — the String class methods
 // ============================================================
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -297,28 +298,6 @@ static Value string_index_of(ArtState *S, int argc, Value *argv)
     return NIL_VAL;
 }
 
-static Value string_repeat(ArtState *S, int argc, Value *argv)
-{
-    (void)argc;
-    Value self = get_this(S);
-    if (!IS_STRING(self)) return NIL_VAL;
-
-    int n = (int)AS_INT(argv[0]);
-    if (n < 0) n = 0;
-
-    ObjString *s = AS_STRING(self);
-    if (n == 0 || s->unit_count == 0)
-        return OBJ_VAL(obj_string_from_utf8(S, "", 0));
-
-    int total = s->unit_count * n;
-    uint16_t *buf = malloc(sizeof(uint16_t) * total);
-    for (int i = 0; i < n; i++)
-        memcpy(buf + i * s->unit_count, s->chars,
-               sizeof(uint16_t) * s->unit_count);
-
-    return take_string(S, buf, total);
-}
-
 static Value string_reverse(ArtState *S, int argc, Value *argv)
 {
     (void)argc; (void)argv;
@@ -352,10 +331,6 @@ static Value string_reverse(ArtState *S, int argc, Value *argv)
     return take_string(S, buf, s->unit_count);
 }
 
-// "a-b-c".replace("-", "+") -> "a+b+c"
-// All occurrences, literal match (no regex). Empty needle is a
-// no-op — Python's behavior, and avoids the "infinite match"
-// problem that would otherwise need special-casing.
 static Value string_replace(ArtState *S, int argc, Value *argv)
 {
     (void)argc;
@@ -371,9 +346,6 @@ static Value string_replace(ArtState *S, int argc, Value *argv)
     if (needle->unit_count == 0)
         return OBJ_VAL(s);
 
-    // Worst-case growth: every unit is the start of a match and
-    // the replacement is longer. Allocate for that, then hand the
-    // buffer to obj_string_take_utf16 with the actual length.
     int max_matches = s->unit_count / needle->unit_count;
     int cap = s->unit_count;
     if (repl->unit_count > needle->unit_count)
@@ -502,10 +474,11 @@ void art_register_string_builtins(ArtState *S)
     art_define_method(S, klass, "endsWith",   string_ends_with,    1);
     art_define_method(S, klass, "contains",   string_contains,     1);
     art_define_method(S, klass, "indexOf",    string_index_of,    -1);
-    art_define_method(S, klass, "repeat",     string_repeat,       1);
     art_define_method(S, klass, "reverse",    string_reverse,      0);
     art_define_method(S, klass, "replace",    string_replace,      2);
     art_define_method(S, klass, "split",      string_split,        1);
+    art_register_find_methods(S, klass);
+    art_register_gsub_methods(S, klass);
 
     GC_POP(S, 2);
 }
