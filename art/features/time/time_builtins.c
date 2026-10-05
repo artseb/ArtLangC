@@ -1,3 +1,10 @@
+// POSIX.1-2008 + XSI (_XOPEN_SOURCE 700) for strdup, realpath, nanosleep. Under -std=c11 glibc hides
+// them, and an implicit strdup() returns int, truncating the pointer on
+// 64-bit. Must come before the first system include.
+#ifndef _WIN32
+#define _XOPEN_SOURCE 700
+#endif
+
 // ============================================================
 // time_builtins.c — the Time namespace
 //

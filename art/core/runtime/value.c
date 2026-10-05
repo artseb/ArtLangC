@@ -13,7 +13,7 @@
 #include <stdio.h>
 
 #include "value.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 bool value_equal(Value a, Value b)
 {

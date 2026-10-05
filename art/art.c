@@ -5,7 +5,7 @@
 #include "art.h"
 #include "state.h"
 #include "interp.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 #include <stdio.h>
 #include <stdlib.h>

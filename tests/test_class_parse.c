@@ -8,8 +8,8 @@
 // The class feature's node structs (ClassDeclNode, FieldDeclNode,
 // MethodDeclNode) live in features/class/class.h. Unlike the other
 // tests, this one reaches into them directly, so it needs the
-// include. test_class_eval.c gets it transitively via builtins.h,
-// which re-exports features/features.h.
+// include. test_class_eval.c gets it transitively via registry.h,
+// which re-exports features/registry.h.
 #include "features/class/class.h"
 
 static int checks = 0;

@@ -82,5 +82,7 @@ foreach(test_src ${TEST_SRC})
     get_filename_component(test_name ${test_src} NAME_WE)
     add_executable(${test_name} ${test_src})
     target_link_libraries(${test_name} PRIVATE art_lib)
-    add_test(NAME ${test_name} COMMAND ${test_name})
+    # Tests open files by repo-relative path (tests/tmp, tests/fixtures).
+    add_test(NAME ${test_name} COMMAND ${test_name}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endforeach()

@@ -1,14 +1,19 @@
+#ifndef _WIN32
+#define _XOPEN_SOURCE 700
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
 #include <direct.h>
+#else
+#include <sys/stat.h>
 #endif
 
 #include "state.h"
 #include "interp.h"
-#include "builtins.h"
+#include "features/registry.h"
 #include "parser.h"
 
 static int checks = 0;

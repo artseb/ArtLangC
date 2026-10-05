@@ -3,12 +3,6 @@
 
 #include "value.h"
 
-#include "features/const/const_tokens.h"
-#include "features/class/class_tokens.h"
-#include "features/enum/enum_tokens.h"
-#include "features/switch/switch_tokens.h"
-#include "features/interface/interface_tokens.h"
-
 // ============================================================
 // Token list — one source of truth, expanded by the preprocessor
 // ============================================================
@@ -85,6 +79,31 @@
     /* --- special --- */           \
     X(ERROR, "error")               \
     X(EOF, "end of file")
+
+// --- feature keywords (kept here so the full token set is in one place) ---
+
+#define CONST_TOKENS(X) \
+    X(CONST, "const")
+
+#define CLASS_TOKENS(X)         \
+    X(CLASS, "class")           \
+    X(EXTENDS, "extends")       \
+    X(IMPLEMENTS, "implements") \
+    X(STATIC, "static")         \
+    X(GET, "get")               \
+    X(SET, "set")               \
+    X(OPERATOR, "operator")     \
+    X(THIS, "this")             \
+    X(SUPER, "super")
+
+#define ENUM_TOKENS(X) \
+    X(ENUM, "enum")
+
+#define SWITCH_TOKENS(X) \
+    X(SWITCH, "switch")
+
+#define INTERFACE_TOKENS(X) \
+    X(INTERFACE, "interface")
 
 #define ALL_TOKENS(X) \
     CORE_TOKENS(X)    \

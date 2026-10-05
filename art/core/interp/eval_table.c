@@ -1,6 +1,6 @@
 #include "interp.h"
 #include "scope.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 Value eval_table_literal(ArtState *S, Node *n)
 {

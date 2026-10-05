@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "ast.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 Node *ast_alloc_node(size_t size, NodeType type,
                             int line, int col, bool is_expr)

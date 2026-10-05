@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 typedef enum
 {

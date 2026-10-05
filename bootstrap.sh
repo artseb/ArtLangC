@@ -137,6 +137,6 @@ echo "  Binary:  $SCRIPT_DIR/bin/art"
 echo
 echo "  Try it:"
 echo "    ./bin/art examples/warmup.art"
-echo "    ./bin/art examples/vector3.art"
+echo "    ./bin/art examples/battle.art"
 echo "    ./bin/art"
 say "============================================================"

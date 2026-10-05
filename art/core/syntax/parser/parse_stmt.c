@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "parser.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 static Node *parse_decl(Parser *P);
 static Node *parse_while(Parser *P);

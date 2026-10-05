@@ -7,11 +7,6 @@
 #include "value.h"
 #include "token.h"
 
-#include "features/class/class_nodes.h"
-#include "features/enum/enum_nodes.h"
-#include "features/switch/switch_nodes.h"
-#include "features/interface/interface_nodes.h"
-
 typedef struct Node Node;
 typedef struct ObjFunction ObjFunction;
 
@@ -38,6 +33,25 @@ typedef struct ObjFunction ObjFunction;
     X(INTERP)                 \
     X(MULTI_DECL)             \
     X(IS)
+
+// --- feature node lists (kept here so the full node set is in one place) ---
+
+#define CLASS_NODES(X) \
+    X(CLASS_DECL)      \
+    X(FIELD_DECL)      \
+    X(METHOD_DECL)     \
+    X(THIS)            \
+    X(SUPER)
+
+#define ENUM_NODES(X) \
+    X(ENUM_DECL)      \
+    X(ENUM_MEMBER)
+
+#define SWITCH_NODES(X) \
+    X(SWITCH)
+
+#define INTERFACE_NODES(X) \
+    X(INTERFACE_DECL)
 
 #define ALL_NODES(X) \
     CORE_NODES(X)    \

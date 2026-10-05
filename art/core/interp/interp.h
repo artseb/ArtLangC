@@ -5,7 +5,7 @@
 #include "ast.h"
 #include "value.h"
 #include "state.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 Value art_run_source(ArtState *S, const char *source, int length,
                      const char *file_name);

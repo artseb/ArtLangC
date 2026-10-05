@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include "ast.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 static void free_children(Node *n)
 {

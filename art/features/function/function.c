@@ -1,10 +1,20 @@
 // ============================================================
+// function.c — the function feature, in one file
+//
+// Sections, in order: runtime, feature.
+// ============================================================
+
+#include "function.h"
+#include "gc.h"
+#include "feature.h"
+#include <stdlib.h>
+
+// ---------------- runtime ----------------
+
+// ============================================================
 // function_runtime.c — constructors + shared arity helpers
 // ============================================================
 
-#include <stdlib.h>
-#include "function.h"
-#include "gc.h"
 
 ObjFunction *obj_function_new(ArtState *S, ObjString *name)
 {
@@ -58,3 +68,14 @@ bool function_accepts_arity(ObjFunction *fn, int argc)
         return argc >= min;
     return argc >= min && argc <= fn->arity;
 }
+
+// ---------------- feature ----------------
+
+// ============================================================
+// function_feature.c — the function Feature struct
+// ============================================================
+
+
+Feature function_feature = {
+    .name = "function",
+};

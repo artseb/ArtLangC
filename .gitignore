@@ -22,6 +22,10 @@ Testing/
 *.xcodeproj/
 *.xcworkspace/
 
+# Test binaries: no extension on Linux/macOS (.exe is covered above)
+tests/test_*
+!tests/test_*.c
+
 # Test run artifacts. tests/test_class_eval.c writes these on
 # every run; they're regenerated, not source.
 tests/tmp/*.txt

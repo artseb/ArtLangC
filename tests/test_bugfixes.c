@@ -9,7 +9,7 @@
 
 #include "state.h"
 #include "interp.h"
-#include "builtins.h"
+#include "features/registry.h"
 #include "gc.h"
 
 static int checks = 0;

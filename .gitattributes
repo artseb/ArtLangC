@@ -1,0 +1,9 @@
+# Normalize line endings so Linux/macOS and Windows checkouts agree.
+* text=auto eol=lf
+
+# Must stay LF or the shell refuses to run them.
+*.sh      text eol=lf
+Makefile  text eol=lf
+
+# cmd.exe needs CRLF for labels/goto to work reliably.
+*.bat     text eol=crlf

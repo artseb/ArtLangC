@@ -3,7 +3,7 @@
 #include <string.h>
 #include "state.h"
 #include "interp.h"
-#include "builtins.h"
+#include "features/registry.h"
 #include "gc.h"
 #include "parser.h"
 #include "art.h"

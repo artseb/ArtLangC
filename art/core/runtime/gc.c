@@ -8,7 +8,7 @@
 #include "gc.h"
 #include "state.h"
 #include "ast.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 void art_gc_init(GcState *gc)
 {

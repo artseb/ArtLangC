@@ -3,7 +3,7 @@
 #include <string.h>
 #include "state.h"
 #include "interp.h"
-#include "builtins.h"
+#include "features/registry.h"
 
 static int checks = 0;
 static int failed = 0;

@@ -11,7 +11,7 @@
 #include "scope.h"
 #include "parser.h"
 #include "interrupt.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 #include <stdio.h>
 #include <string.h>

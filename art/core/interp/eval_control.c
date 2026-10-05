@@ -13,7 +13,7 @@
 
 #include "interp.h"
 #include "scope.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 Value eval_decl(ArtState *S, Node *n)
 {

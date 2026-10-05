@@ -5,7 +5,7 @@
 #include "interp.h"
 #include "scope.h"
 #include "format.h"
-#include "features/features.h"
+#include "features/registry.h"
 
 #include <math.h>
 #include <string.h>

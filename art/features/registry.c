@@ -1,11 +1,11 @@
 // ============================================================
-// features.c — the feature registry
+// registry.c — the feature registry
 //
-// Expanded from FEATURES(X) in features.h. Never edit this file
-// to add a feature — edit the list in features.h instead.
+// Expanded from FEATURES(X) in registry.h. Never edit this file
+// to add a feature — edit the list in registry.h instead.
 // ============================================================
 
-#include "features.h"
+#include "registry.h"
 
 #define FEATURE_EXTERN(name) extern Feature name##_feature;
 FEATURES(FEATURE_EXTERN)

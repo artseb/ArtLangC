@@ -108,19 +108,10 @@ Standard library modules written in ART, in `stdlib/`.
 
 ## Layout
 
-    art/                interpreter source
+    art/                interpreter source (see art/README.md)
     stdlib/             libraries written in ART
     examples/           example scripts
     tests/              test binaries
-
-## Architecture
-
-- `art/core/runtime/` — Value, Obj, GC, ArtState, registration helpers
-- `art/core/syntax/` — lexer, parser, AST, pattern engine
-- `art/core/interp/` — the tree-walking evaluator, format specs
-- `art/features/` — one folder per language feature
-- `art/builtins.h` — compatibility shim (the builtins/ folder was
-  dissolved; every builtin is now a feature)
 
 ## Language reference
 

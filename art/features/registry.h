@@ -1,5 +1,5 @@
-#ifndef ART_FEATURES_H
-#define ART_FEATURES_H
+#ifndef ART_REGISTRY_H
+#define ART_REGISTRY_H
 
 #include "feature.h"
 
@@ -28,7 +28,7 @@
 //   1. One include line above.
 //   2. One X() entry here.
 //
-// features.c expands this to produce the extern declarations and
+// registry.c expands this to produce the extern declarations and
 // the g_features[] array. Order matters: it is the hook priority
 // (first feature to claim an event wins) AND the order in which
 // register_builtins runs.
@@ -55,4 +55,4 @@
 // name overwrites.
 void art_register_builtins(ArtState *S);
 
-#endif // ART_FEATURES_H
+#endif // ART_REGISTRY_H
