@@ -1,13 +1,11 @@
-# ART — Language Reference
+# ART, Language Reference
 
 Every feature in the language, with a one-line definition and
 up to three examples where the shape isn't obvious. This is the
 authoritative answer to "does ART have X".
 
 Maintained by hand. If something here disagrees with the source,
-the source wins — but fix the doc.
-
----
+the source wins, but fix the doc.
 
 ## Contents
 
@@ -51,8 +49,6 @@ the source wins — but fix the doc.
 - Multiline expressions
 - Keyword member names
 
----
-
 ## Variables
 
 Three kinds. `local x` scopes to the current block; bare `x`
@@ -81,7 +77,7 @@ a, b = [10, 20]          // reassigns both, doesn't redeclare
 local x, y = f()          // unpack a function's return
 ```
 
----
+
 
 ## Numbers
 
@@ -97,12 +93,12 @@ print(10 % 3)            // 1, and negative-safe: -7 % 3 is 2
 
 Literals: `42`, `1.5`, `1e10`, `1.5e-3`.
 
----
+
 
 ## Strings
 
 UTF-16 internally, codepoint-indexed at the language level.
-Immutable — every operation returns a new string. All strings
+Immutable, every operation returns a new string. All strings
 are interned, so `==` is pointer comparison.
 
 ### Literals
@@ -114,7 +110,7 @@ local c = """raw, no escapes, spans
 multiple lines"""
 ```
 
-Triple-quoted strings take no escapes — backslashes are literal.
+Triple-quoted strings take no escapes, backslashes are literal.
 
 ### Interpolation
 
@@ -135,11 +131,11 @@ print("nested: ${list.map(fun(x) { return x * 2 })}")
 local hp = 42
 local pct = 0.755
 
-"${hp:05d}"           // "00042"   — zero-padded to width 5
-"${hp:#x}"            // "0x2a"    — hex with prefix
-"${pct:.1f}%"         // "75.5%"   — one decimal
-"${name:<10}|"        // "Kara      |" — left-align
-"${name:*^10}"        // "***Kara***" — centered, star fill
+"${hp:05d}"           // "00042"  , zero-padded to width 5
+"${hp:#x}"            // "0x2a"   , hex with prefix
+"${pct:.1f}%"         // "75.5%"  , one decimal
+"${name:<10}|"        // "Kara      |", left-align
+"${name:*^10}"        // "***Kara***", centered, star fill
 ```
 
 Type letters: `d i x X o f e g s c`. Width, fill, alignment,
@@ -177,10 +173,10 @@ sign, `#` prefix, and `.precision` all supported.
 ```
 
 `+` is the only operator that coerces. `"a" - 1` is a runtime
-error, and so is `"5" * 2` — the string is a string, not a
+error, and so is `"5" * 2`, the string is a string, not a
 number, so repeat doesn't apply (2 is fine, but 2.5 is not).
 
----
+
 
 ## Tables
 
@@ -232,7 +228,7 @@ t.push(4, 5, 6)         // append several at once
 t.pop()                 // 6, removes from end
 t.length()              // 5
 t.isEmpty()             // false
-t.contains(3)           // true — searches values, both halves
+t.contains(3)           // true, searches values, both halves
 t.indexOf(3)            // 3
 t.insert(2, 99)         // insert at position 2
 t.remove(1)             // remove and return value at position 1
@@ -240,7 +236,7 @@ t.reverse()             // in place
 t.clear()               // empties both array and hash
 t.slice(2, 4)           // new table, elements 2..4 inclusive
 t.clone()               // shallow copy of both halves
-t.join(", ")            // "1, 2, 3" — tostring each, join with sep
+t.join(", ")            // "1, 2, 3", tostring each, join with sep
 ```
 
 Higher-order operations (array part only):
@@ -286,7 +282,7 @@ for (local k, v in ["a" = 1, "b" = 2]) {
 }
 ```
 
----
+
 
 ## if
 
@@ -324,7 +320,7 @@ local x = (user and user.name) or "guest"    // BROKEN if name is nil
 local x = if (user) -> user.name else "guest"  // correct
 ```
 
----
+
 
 ## while
 
@@ -336,7 +332,7 @@ while (i < 10) {
 }
 ```
 
----
+
 
 ## for-range
 
@@ -367,13 +363,13 @@ for (local i = 1 -> 3) {
 fns[1]() + fns[2]() + fns[3]()   // 6 (not 12)
 ```
 
----
+
 
 ## for-in
 
 See Tables → Iteration.
 
----
+
 
 ## break / continue / return
 
@@ -388,7 +384,7 @@ for (local i = 1 -> 100) {
 }
 ```
 
----
+
 
 ## switch
 
@@ -424,7 +420,7 @@ switch (color) {
 }
 ```
 
----
+
 
 ## Functions and closures
 
@@ -464,7 +460,7 @@ fun fib(n) {
 fib(10)                          // 55
 ```
 
----
+
 
 ## Lambdas
 
@@ -489,7 +485,7 @@ local classify = fun(x) {
 }
 ```
 
----
+
 
 ## Defaults and variadics
 
@@ -524,7 +520,7 @@ fun log(level, ...parts) {
 log("INFO", "user", "logged", "in")
 ```
 
----
+
 
 ## Classes
 
@@ -595,12 +591,12 @@ c.value                          // 1
 c.count                          // ERROR: field is private
 ```
 
----
+
 
 ## Getters and setters
 
 Declared with `get name {}` and `set name(v) {}`. Called by
-ordinary member access — no parens at the call site.
+ordinary member access, no parens at the call site.
 
 ```
 class Temperature {
@@ -620,7 +616,7 @@ t.celsius = 0
 t.fahrenheit                     // 32
 ```
 
----
+
 
 ## Operator overloading
 
@@ -676,7 +672,7 @@ class Vec {
 Non-commutative ops (`-`, `/`) don't reverse. `10 - Vec(5)`
 errors unless Vec has an `operator -` accepting a number.
 
----
+
 
 ## Static members
 
@@ -703,7 +699,7 @@ Counter.reset()
 Counter.total                    // 0
 ```
 
----
+
 
 ## Inheritance and super
 
@@ -729,11 +725,11 @@ d.speak()                        // "woof"
 d.parentSpeak()                  // "..."
 ```
 
----
+
 
 ## Interfaces
 
-A contract. Declarations only — no bodies. Verification runs
+A contract. Declarations only, no bodies. Verification runs
 when the class is defined, not when a method is called.
 
 ```
@@ -782,7 +778,7 @@ class ConsoleLogger implements Logger {
 The class must accept every arity the interface accepts. A fixed
 `fun log(a)` doesn't satisfy `fun log(...parts)`.
 
----
+
 
 ## Enums
 
@@ -818,7 +814,7 @@ Color.Red in Color               // true
 Other.Red in Color               // false
 ```
 
----
+
 
 ## Errors
 
@@ -854,7 +850,7 @@ assert(n >= 0, "n must be non-negative")
 assert(items.length() > 0, "cannot process empty list")
 ```
 
----
+
 
 ## Imports
 
@@ -876,7 +872,7 @@ import "lib/helpers.art"         // explicit
 
 Cycles are detected and raise an error.
 
----
+
 
 ## Builtins
 
@@ -934,7 +930,7 @@ Time.clock()                     // CPU seconds, monotonic
 Time.sleep(ms)                   // blocks
 ```
 
----
+
 
 ## Patterns
 
@@ -1002,7 +998,7 @@ Limit replacements with a third argument:
 "a-b-c-d".gsub("-", "+", 2)                  // "a+b+c-d"
 ```
 
----
+
 
 ## Type checks
 
@@ -1024,25 +1020,25 @@ V() is SomeInterface             // interface check
 Builtin type names: `Any`, `Number`, `Int`, `Float`, `String`,
 `Bool`, `Nil`, `Table`, `Function`.
 
----
+
 
 ## Membership
 
 `in` works on tables, strings, and enums.
 
 ```
-2 in [1, 2, 3]                   // true — array value
-"x" in ["x" = 1]                 // true — hash key
-"xyz" in "hello"                 // false — substring
+2 in [1, 2, 3]                   // true, array value
+"x" in ["x" = 1]                 // true, hash key
+"xyz" in "hello"                 // false, substring
 "ell" in "hello"                 // true
 Color.Red in Color               // true
 ```
 
 Table `in` checks both the array part (values) and the hash part
-(keys). It doesn't check hash values — use `.contains()` for
+(keys). It doesn't check hash values, use `.contains()` for
 that.
 
----
+
 
 ## Multiline expressions
 
@@ -1061,7 +1057,7 @@ local names = people
     .join(", ")
 ```
 
----
+
 
 ## Keyword member names
 
@@ -1080,24 +1076,24 @@ A().static()                     // 2
 ["get" = 5].get                  // 5
 ```
 
----
+
 
 ## Not in ART
 
 Things that were considered and rejected, or removed:
 
-- **`String.format()`** — removed. Use interpolation specs
+- **`String.format()`**, removed. Use interpolation specs
 (`"${x:05d}"`). One formatting mechanism, not two.
-- **`String.repeat()`** — removed. Use the `*` operator
+- **`String.repeat()`**, removed. Use the `*` operator
 (`"ab" * 3`).
-- **Regex** — not implemented. Lua patterns cover the common
+- **Regex**, not implemented. Lua patterns cover the common
 cases.
-- **Coroutines** — not implemented. Requires platform-specific
+- **Coroutines**, not implemented. Requires platform-specific
 stack switching.
-- **Nil-safe operators (`?.`, `??`)** — not implemented.
+- **Nil-safe operators (`?.`, `??`)**, not implemented.
 `attempt` and `assert` cover the error-handling need.
-- **Named arguments** — not implemented. Positional only.
-- **Multiple return values** — not implemented. Return a table
+- **Named arguments**, not implemented. Positional only.
+- **Multiple return values**, not implemented. Return a table
 and use multi-assignment to unpack it.
-- **Range operator (`..`)** — not implemented. `for-range` uses
+- **Range operator (`..`)**, not implemented. `for-range` uses
 `->`, table slicing uses `.slice(a, b)`.

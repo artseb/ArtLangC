@@ -4,15 +4,14 @@
 # Wildcard source discovery: adding a new .c file under art/
 # requires no edit here. Tests are discovered the same way.
 #
-# Include paths: every source directory a bare #include might
-# reference. Kept explicit so moving a file between directories
-# is a visible change.
+# Portable across GCC and Clang on Linux, macOS, and MSYS2.
+# The `-lm` flag is a no-op on macOS; it's needed on Linux
+# where math lives in a separate library.
 #
-# Requirements: C11, GCC or Clang, libm.
-# Tested with GCC 16 on MSYS2/UCRT64.
+# Requirements: C11, GCC or Clang, libm (Linux only).
 # ============================================================
 
-CC      := gcc
+CC      ?= gcc
 CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter -g -O0 -MMD -MP \
            -Iart \
            -Iart/core/runtime \
@@ -23,11 +22,6 @@ CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter -g -O0 -MMD -MP \
 LDFLAGS := -lm
 
 # --- Stale-file guard ----------------------------------------
-#
-# Files that have been moved or split. If any are still on disk,
-# wildcard discovery compiles them alongside their new copies,
-# producing duplicate-symbol link errors. Fail early with a
-# clear message listing exactly what to delete.
 
 STALE := \
     art/core/runtime/obj_string.c \
@@ -49,7 +43,8 @@ STALE := \
     art/features/switch/switch_ast_free.c \
     art/features/const/const_eval.c \
     art/features/const/const_feature.c \
-    art/features/const/const_parse.c
+    art/features/const/const_parse.c \
+    art/features/string/string_pattern.c
 
 ifneq ($(wildcard $(STALE)),)
 $(error Stale file(s) present: $(wildcard $(STALE)). These were moved, \
@@ -57,11 +52,6 @@ split, or merged. Run: rm $(wildcard $(STALE)))
 endif
 
 # --- Source discovery ----------------------------------------
-#
-# Note the two features globs: art/features/*.c catches files
-# directly under features/ (currently just features.c, which
-# defines g_features[] and art_register_builtins), and
-# art/features/*/*.c catches the per-feature subdirectories.
 
 CORE_SRC := \
     $(wildcard art/core/runtime/*.c) \
@@ -105,7 +95,6 @@ bin:
 test: all
 	@set -e; \
 	for t in $(TEST_BIN); do \
-        echo; \
 	    echo "=== $$t ==="; \
 	    ./$$t; \
 	done

@@ -8,8 +8,10 @@ A dynamically-typed scripting language.
     ./bin/art script.art
     ./bin/art
 
-For build instructions on Windows, macOS, IDEs, and no-GCC
-environments, see `BUILDING.md`.
+On Windows, `bootstrap.bat` installs MSYS2 and the toolchain in
+one step. On Linux and macOS, `./bootstrap.sh` does the same.
+For build instructions on other platforms, IDEs, and MSVC, see
+`BUILDING.md`.
 
 ## Syntax
 
@@ -61,19 +63,15 @@ environments, see `BUILDING.md`.
 - Strings: UTF-16, codepoint-indexed. Interpolation `"x is ${x}"`. Multi-line `"""..."""`.
 - Tables: `[...]` — array part (1-indexed) and string-keyed hash part, one type.
 - Functions: first-class, closures, variadics `...args`, default arguments.
-- Classes: inheritance, overloaded methods and operators, getters/setters, static methods. `local` members are private. Fields must be declared at the top of the class body before any `this.field = ...` assignment.
-- Interfaces: `implements` declares a contract. Verification happens at class definition. Interface methods declare signatures only — no bodies.
-- Enums: named singletons with optional values. Enum bodies contain only member names; no methods or constructors.
-- Switch: expression or statement. No fall-through. `else` is the default. Arms use `->`.
+- Classes: inheritance, overloaded methods and operators, getters/setters, static methods. `local` members are private.
+- Interfaces: `implements` declares a contract. Verification happens at class definition.
+- Enums: named singletons with optional values.
+- Switch: expression or statement. No fall-through. `else` is the default.
 - Errors: `attempt(fn, ...)` returns `[ok, value_or_message]`. Uncaught errors print `file:line:col: message` with a stack trace.
 - Imports: `import "path"` — cached by absolute path, relative to the importing file.
 - Operators: `and`/`or` return operands. `a op= b` desugars. User classes can overload `+ - * / % ^ < > <= >= == !=` and unary `-`.
-- String concatenation: `+` with a string operand coerces the other side via `tostring`. `"n = " + 5` is `"n = 5"`. Numeric `+` is unchanged. A user-defined `operator +` on the left operand still wins over coercion.
 - Types: `x is Int`, `x is SomeClass`, `x is SomeInterface`.
 - Membership: `k in table`, `substring in string`, `member in enum`.
-- Multiline expressions: a binary operator or `.` at the start of a
-  line continues the previous expression. A newline before any other
-  token ends the statement.
 
 ## Builtins
 
@@ -86,8 +84,9 @@ environments, see `BUILDING.md`.
                         pi, tau, e, inf, nan
 
     String methods      length, charAt, substring, upper, lower, trim, isEmpty,
-                        startsWith, endsWith, contains, indexOf, replace, split,
-                        repeat, reverse, toInt, toFloat
+                        startsWith, endsWith, contains, indexOf, replace,
+                        split, reverse, toInt, toFloat,
+                        find, match, gmatch, gsub
 
     Table methods       push, pop, length, isEmpty, contains, indexOf, clear,
                         reverse, clone, keys, values, insert, remove, slice,

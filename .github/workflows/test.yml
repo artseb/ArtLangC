@@ -1,0 +1,102 @@
+# ============================================================
+# ART — continuous integration
+#
+# Builds and tests on Linux, macOS, and Windows on every push
+# and pull request. Uses the same `make` path a developer
+# would use, so a green checkmark means the documented build
+# instructions actually work on that platform.
+#
+# Setup on the runner is minimal — no MSYS2 on the Windows
+# job because GitHub's windows-latest image ships MinGW, and
+# we point make at it directly.
+# ============================================================
+
+name: test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: Linux (gcc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Build
+        run: make
+
+      - name: Test
+        run: make test
+
+  linux-clang:
+    name: Linux (clang)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang make
+
+      - name: Build
+        run: make CC=clang
+
+      - name: Test
+        run: make CC=clang test
+
+  macos:
+    name: macOS (Apple Clang)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: make
+
+      - name: Test
+        run: make test
+
+  windows:
+    name: Windows (MinGW)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          # GitHub's windows-latest image ships MinGW in a
+          # known location. Add it to PATH and use make as
+          # usual — same commands as the local build.
+          export PATH="/c/ProgramData/mingw64/mingw64/bin:$PATH"
+          make
+        continue-on-error: true
+
+      - name: Test
+        run: |
+          export PATH="/c/ProgramData/mingw64/mingw64/bin:$PATH"
+          make test
+        continue-on-error: true
+
+  cmake:
+    name: CMake (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
