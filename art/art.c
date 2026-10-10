@@ -5,6 +5,8 @@
 #include "art.h"
 #include "state.h"
 #include "interp.h"
+#include "interrupt.h"
+#include "register.h"
 #include "features/registry.h"
 
 #include <stdio.h>
@@ -68,4 +70,10 @@ bool art_run_file(ArtState *S, const char *path)
     bool ok = art_run_string(S, buf, path);
     free(buf);
     return ok;
+}
+
+void art_register_native(ArtState *S, const char *name,
+                         NativeFn fn, int arity)
+{
+    art_define_native(S, S->global_scope->vars, name, fn, arity);
 }

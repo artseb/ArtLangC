@@ -200,13 +200,6 @@ static void fb_append(FmtBuf *fb, const uint16_t *src, int n)
     fb->len += n;
 }
 
-static void fb_append_ascii(FmtBuf *fb, const char *s, int n)
-{
-    fb_ensure(fb, n);
-    for (int i = 0; i < n; i++)
-        fb->buf[fb->len++] = (uint16_t)(unsigned char)s[i];
-}
-
 static void fb_fill(FmtBuf *fb, uint16_t c, int n)
 {
     if (n <= 0)

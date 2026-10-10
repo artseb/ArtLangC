@@ -54,6 +54,8 @@
     X(IF, "if")                     \
     X(ELSE, "else")                 \
     X(WHILE, "while")               \
+    X(REPEAT, "repeat")             \
+    X(UNTIL, "until")               \
     X(FOR, "for")                   \
     X(IN, "in")                     \
     X(RETURN, "return")             \

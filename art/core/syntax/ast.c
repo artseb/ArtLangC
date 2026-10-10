@@ -150,6 +150,15 @@ Node *node_while(int line, int col, Node *cond, Node *body)
     return (Node *)n;
 }
 
+Node *node_repeat(int line, int col, Node *body, Node *cond)
+{
+    RepeatNode *n = (RepeatNode *)ast_alloc_node(
+        sizeof(RepeatNode), NODE_REPEAT, line, col, false);
+    n->body = body;
+    n->cond = cond;
+    return (Node *)n;
+}
+
 Node *node_for_range(int line, int col, Node *init, Node *end, Node *step, Node *body)
 {
     ForRangeNode *n = (ForRangeNode *)ast_alloc_node(

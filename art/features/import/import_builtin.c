@@ -190,7 +190,7 @@ static Value builtin_import(ArtState *S, int argc, Value *argv)
     S->error_frame = fp;
 
     S->control = CONTROL_NONE;
-    Value result = NIL_VAL;
+    Value volatile result = NIL_VAL;
 
     if (setjmp(fp->buf) == 0)
     {

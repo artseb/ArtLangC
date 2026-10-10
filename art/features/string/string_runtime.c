@@ -325,6 +325,34 @@ ObjString *obj_string_concat(ArtState *S, ObjString *a, ObjString *b)
     return result;
 }
 
+ObjString *obj_string_concat_all(ArtState *S, ObjString **pieces, int count)
+{
+    if (count == 0)
+        return obj_string_from_utf8(S, "", 0);
+    if (count == 1)
+        return pieces[0];
+
+    int total = 0;
+    for (int i = 0; i < count; i++)
+        total += pieces[i]->unit_count;
+
+    if (total == 0)
+        return obj_string_from_utf8(S, "", 0);
+
+    uint16_t *buf = malloc(sizeof(uint16_t) * total);
+    int off = 0;
+    for (int i = 0; i < count; i++)
+    {
+        memcpy(buf + off, pieces[i]->chars,
+               sizeof(uint16_t) * pieces[i]->unit_count);
+        off += pieces[i]->unit_count;
+    }
+
+    ObjString *result = obj_string_intern_utf16(S, buf, total);
+    free(buf);
+    return result;
+}
+
 ObjString *obj_string_substring(ArtState *S, ObjString *s,
                                 int start_char, int end_char)
 {

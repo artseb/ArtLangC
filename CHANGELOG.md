@@ -10,44 +10,45 @@ the source wins, but fix the doc.
 ## Contents
 
 **Values**
-- Variables
-- Numbers
-- Strings
-- Tables
+- [Variables](#variables)
+- [Numbers](#numbers)
+- [Strings](#strings)
+- [Tables](#tables)
 
 **Control flow**
-- if
-- while
-- for-range
-- for-in
-- break / continue / return
-- switch
+- [if](#if)
+- [while](#while)
+- [repeat](#repeat)
+- [for-range](#for-range)
+- [for-in](#for-in)
+- [break / continue / return](#break--continue--return)
+- [switch](#switch)
 
 **Functions**
-- Functions and closures
-- Lambdas
-- Defaults and variadics
+- [Functions and closures](#functions-and-closures)
+- [Lambdas](#lambdas)
+- [Defaults and variadics](#defaults-and-variadics)
 
 **Object orientation**
-- Classes
-- Getters and setters
-- Operator overloading
-- Static members
-- Inheritance and super
-- Interfaces
-- Enums
+- [Classes](#classes)
+- [Getters and setters](#getters-and-setters)
+- [Operator overloading](#operator-overloading)
+- [Static members](#static-members)
+- [Inheritance and super](#inheritance-and-super)
+- [Interfaces](#interfaces)
+- [Enums](#enums)
 
 **System**
-- Errors
-- Imports
-- Builtins
-- Patterns
-- Type checks
-- Membership
+- [Errors](#errors)
+- [Imports](#imports)
+- [Builtins](#builtins)
+- [Patterns](#patterns)
+- [Type checks](#type-checks)
+- [Membership](#membership)
 
 **Syntax details**
-- Multiline expressions
-- Keyword member names
+- [Multiline expressions](#multiline-expressions)
+- [Keyword member names](#keyword-member-names)
 
 ## Variables
 
@@ -63,7 +64,7 @@ const MAX_HP = 999       // immutable
 
 `local` without a value declares with `nil`:
 
-```
+```art
 local result
 if (ready) { result = compute() }
 ```
@@ -71,13 +72,11 @@ if (ready) { result = compute() }
 Multi-assignment unpacks a table's array part. Missing slots
 become `nil`, extra slots are ignored.
 
-```
+```art
 local a, b, c = [1, 2, 3]
 a, b = [10, 20]          // reassigns both, doesn't redeclare
 local x, y = f()          // unpack a function's return
 ```
-
-
 
 ## Numbers
 
@@ -85,15 +84,13 @@ Two types: `int` (64-bit signed) and `float` (64-bit double).
 Ints stay ints when both operands are ints; any float promotes.
 `/` is **floor division** for ints.
 
-```
+```art
 print(10 / 3)            // 3
 print(10.0 / 3)          // 3.33333
 print(10 % 3)            // 1, and negative-safe: -7 % 3 is 2
 ```
 
 Literals: `42`, `1.5`, `1e10`, `1.5e-3`.
-
-
 
 ## Strings
 
@@ -103,7 +100,7 @@ are interned, so `==` is pointer comparison.
 
 ### Literals
 
-```
+```art
 local a = "hello"
 local b = "line one\nline two"
 local c = """raw, no escapes, spans
@@ -116,7 +113,7 @@ Triple-quoted strings take no escapes, backslashes are literal.
 
 `${expr}` evaluates an expression and inserts its `tostring`.
 
-```
+```art
 local name = "Kara"
 print("hello ${name}")            // hello Kara
 print("2 + 2 = ${2 + 2}")         // 2 + 2 = 4
@@ -127,7 +124,7 @@ print("nested: ${list.map(fun(x) { return x * 2 })}")
 
 `${expr:spec}` controls the rendering. Python-style grammar.
 
-```
+```art
 local hp = 42
 local pct = 0.755
 
@@ -143,7 +140,7 @@ sign, `#` prefix, and `.precision` all supported.
 
 ### Methods
 
-```
+```art
 "hello".length()              // 5
 "hello".upper()               // "HELLO"
 "hello".charAt(1)             // "h"     (1-based)
@@ -164,7 +161,7 @@ sign, `#` prefix, and `.precision` all supported.
 `+` with a string operand coerces the other side via `tostring`.
 `*` with a string and an int repeats.
 
-```
+```art
 "n = " + 5              // "n = 5"
 5 + " items"            // "5 items"
 "ab" * 3                // "ababab"
@@ -176,14 +173,12 @@ sign, `#` prefix, and `.precision` all supported.
 error, and so is `"5" * 2`, the string is a string, not a
 number, so repeat doesn't apply (2 is fine, but 2.5 is not).
 
-
-
 ## Tables
 
 The one collection type. Every table has a dense array part
 (1-indexed) and/or a string-keyed hash part. Literals can mix.
 
-```
+```art
 local arr = [1, 2, 3]
 local map = ["hp" = 30, "mp" = 12]
 local mixed = [10, 20, "name" = "Kara"]
@@ -191,7 +186,7 @@ local mixed = [10, 20, "name" = "Kara"]
 
 ### Access
 
-```
+```art
 arr[1]                  // 1        (1-based)
 arr[-1]                 // 3        (negative counts from end)
 map["hp"]               // 30
@@ -206,7 +201,7 @@ would land before 1 raise an error.
 
 `tostring` and `print` render tables structurally:
 
-```
+```art
 tostring([1, 2, 3])                 // "[1, 2, 3]"
 tostring(["a" = 1, "b" = 2])        // "{"a": 1, "b": 2}"
 tostring([[1,2],[3,4]])             // "[[1, 2], [3, 4]]"
@@ -221,7 +216,7 @@ depth 4. Long output truncates with `, ...` past 512 chars.
 
 Array operations:
 
-```
+```art
 local t = [1, 2, 3]
 
 t.push(4, 5, 6)         // append several at once
@@ -241,7 +236,7 @@ t.join(", ")            // "1, 2, 3", tostring each, join with sep
 
 Higher-order operations (array part only):
 
-```
+```art
 [1, 2, 3].map(fun(x) { return x * 2 })     // [2, 4, 6]
 [1, 2, 3, 4].filter(fun(x) { return x % 2 == 0 })   // [2, 4]
 [1, 2, 3].reduce(fun(acc, x) { return acc + x }, 0) // 6
@@ -254,7 +249,7 @@ Higher-order operations (array part only):
 
 Sorting:
 
-```
+```art
 local t = [3, 1, 4, 1, 5]
 t.sort()                                    // ascending
 t.sort(fun(a, b) { return a > b })          // descending, custom
@@ -262,7 +257,7 @@ t.sort(fun(a, b) { return a > b })          // descending, custom
 
 Keys and values:
 
-```
+```art
 ["a" = 1, "b" = 2].keys()       // ["a", "b"], order unspecified
 ["a" = 1, "b" = 2].values()     // [1, 2]
 ```
@@ -272,7 +267,7 @@ Keys and values:
 `for-in` walks the array part first (keys 1..n), then the hash
 part (string keys). Order across the hash part is unspecified.
 
-```
+```art
 for (local v in [10, 20, 30]) {
     print(v)                     // 10, 20, 30
 }
@@ -282,13 +277,11 @@ for (local k, v in ["a" = 1, "b" = 2]) {
 }
 ```
 
-
-
 ## if
 
 Two forms. Statement form uses blocks:
 
-```
+```art
 if (hp > 0) {
     print("alive")
 } else if (hp == 0) {
@@ -300,7 +293,7 @@ if (hp > 0) {
 
 Expression form uses `->`. Returns the branch value.
 
-```
+```art
 local status = if (hp > 0) -> "alive" else "dead"
 local mult = if (defending) -> 0.5 else 1.0
 ```
@@ -308,23 +301,21 @@ local mult = if (defending) -> 0.5 else 1.0
 `else` is optional in expression form; missing branch yields
 `nil`.
 
-```
+```art
 local cached = if (k in cache) -> cache[k]
 ```
 
 The expression form is preferred over the `and/or` trick
 because it doesn't break on falsy values:
 
-```
+```art
 local x = (user and user.name) or "guest"    // BROKEN if name is nil
 local x = if (user) -> user.name else "guest"  // correct
 ```
 
-
-
 ## while
 
-```
+```art
 local i = 0
 while (i < 10) {
     print(i)
@@ -332,13 +323,46 @@ while (i < 10) {
 }
 ```
 
+## repeat
 
+```art
+local n = 0
+repeat {
+    n = n + 1
+} until (n >= 5)
+n                                // 5
+```
+
+The body always runs once, unlike `while`, which checks
+before the first iteration:
+
+```art
+local n = 0
+repeat {
+    n = n + 1
+} until (true)
+n                                // 1
+```
+
+`break` and `continue` work as in `while`. `continue` jumps
+to the condition check — the sensible interpretation, since
+"jump to the top of the body" would infinitely loop on the
+first iteration.
+
+```art
+local tries = 0
+repeat {
+    tries = tries + 1
+    if (tries < 3) { continue }
+} until (tries >= 3)
+tries                            // 3
+```
 
 ## for-range
 
 Inclusive on both ends. Optional step, defaults to 1.
 
-```
+```art
 for (local i = 1 -> 10) {
     print(i)                     // 1, 2, 3, ..., 10
 }
@@ -355,7 +379,7 @@ for (local i = 0 -> 100; 5) {
 The loop variable is fresh per iteration, so closures capture
 the value at their own iteration:
 
-```
+```art
 local fns = []
 for (local i = 1 -> 3) {
     fns.push(fun() { return i })
@@ -363,20 +387,16 @@ for (local i = 1 -> 3) {
 fns[1]() + fns[2]() + fns[3]()   // 6 (not 12)
 ```
 
-
-
 ## for-in
 
-See Tables → Iteration.
-
-
+See Tables -> Iteration.
 
 ## break / continue / return
 
 Standard. `break` and `continue` only inside loops. `return`
 only inside functions (top-level `return` ends the program).
 
-```
+```art
 for (local i = 1 -> 100) {
     if (i == 3) { break }
     if (i % 2 == 0) { continue }
@@ -384,13 +404,11 @@ for (local i = 1 -> 100) {
 }
 ```
 
-
-
 ## switch
 
 Expression or statement. No fall-through. Arms use `->`.
 
-```
+```art
 local name = switch (code) {
     200 -> "OK"
     404 -> "Not Found"
@@ -401,7 +419,7 @@ local name = switch (code) {
 
 Multiple values per arm, comma-separated:
 
-```
+```art
 local kind = switch (n) {
     1, 3, 5, 7, 9 -> "odd"
     0, 2, 4, 6, 8 -> "even"
@@ -412,7 +430,7 @@ local kind = switch (n) {
 Type-checked. Every case value must have the same type as the
 subject, or a runtime error fires.
 
-```
+```art
 switch (color) {
     Color.Red -> "red"           // enum values work
     Color.Green, Color.Blue -> "cool"
@@ -426,7 +444,7 @@ switch (color) {
 
 First-class. Closures capture the scope they were defined in.
 
-```
+```art
 fun add(a, b) {
     return a + b
 }
@@ -436,7 +454,7 @@ local result = add(3, 4)         // 7
 
 Closures capture variables by reference:
 
-```
+```art
 fun makeCounter() {
     local n = 0
     return fun() {
@@ -452,7 +470,7 @@ c()                              // 2
 
 Recursion works, but the function must be in scope:
 
-```
+```art
 fun fib(n) {
     if (n < 2) { return n }
     return fib(n - 1) + fib(n - 2)
@@ -467,7 +485,7 @@ fib(10)                          // 55
 Two syntaxes. `x -> expr` for a single param, `(a, b) -> expr`
 for multiple. Body can be an expression or a block.
 
-```
+```art
 local double = x -> x * 2
 local add = (a, b) -> a + b
 local noop = () -> nil
@@ -477,7 +495,7 @@ local noop = () -> nil
 
 Multi-line bodies use braces:
 
-```
+```art
 local classify = fun(x) {
     if (x > 0) { return "positive" }
     if (x < 0) { return "negative" }
@@ -492,7 +510,7 @@ local classify = fun(x) {
 Trailing params can have defaults. `...rest` collects extra
 arguments into a table.
 
-```
+```art
 fun greet(name, greeting = "hello") {
     return greeting + ", " + name
 }
@@ -503,7 +521,7 @@ greet("Kara", "hi")              // "hi, Kara"
 
 Variadic:
 
-```
+```art
 fun sum(...args) {
     return args.reduce(fun(a, b) { return a + b }, 0)
 }
@@ -513,7 +531,7 @@ sum()                            // 0
 
 Mixed fixed and variadic:
 
-```
+```art
 fun log(level, ...parts) {
     print("[" + level + "] " + parts.join(" "))
 }
@@ -528,7 +546,7 @@ Fields must be declared at the top of the class body before any
 method assigns to them. `local` makes a field private to the
 class. Public is the default.
 
-```
+```art
 class Point {
     x = 0
     y = 0
@@ -550,7 +568,7 @@ p.sum()                          // 7
 
 The constructor is the method whose name matches the class.
 
-```
+```art
 class Box {
     v = 0
     fun Box(v) { this.v = v }    // constructor
@@ -558,25 +576,45 @@ class Box {
 Box(42).v                        // 42
 ```
 
-Bare names inside a method walk the scope chain, not the
-instance. Fields are reached through `this.` (or via a getter).
+Bare names inside a method resolve in this order:
 
-```
+1. Locals and parameters of the method
+2. Enclosing scopes (the closure's captured scope chain)
+3. **Class members via `this`** , fields, then getters, then
+methods
+4. Global scope
+5. `nil`
+
+That means a local shadows a field, and a field can be
+reached without the `this.` prefix. Same resolution order as
+Java and C++.
+
+```art
 class C {
-    name = "x"
+    name = "field"
     fun C() { }
     fun fetch() {
-        return name              // ERROR: undefined 'name'
+        return name              // "field": implicit this.name
     }
-    fun fetch2() {
-        return this.name         // correct
+    fun shadow() {
+        local name = "local"
+        return name              // "local": local shadows field
+    }
+    fun double() {
+        return this.fetch() + fetch()  // both work
     }
 }
 ```
 
+`this.` is still the explicit form and still works. The
+implicit fallback only fires when the name didn't resolve in
+the scope chain, so a helper function named `fetch` in an
+outer scope takes precedence over a method named `fetch` on
+the receiver.
+
 Private fields with `local`:
 
-```
+```art
 class Counter {
     local count = 0
 
@@ -598,7 +636,7 @@ c.count                          // ERROR: field is private
 Declared with `get name {}` and `set name(v) {}`. Called by
 ordinary member access, no parens at the call site.
 
-```
+```art
 class Temperature {
     local _celsius = 0
 
@@ -623,7 +661,7 @@ t.fahrenheit                     // 32
 Any of `+ - * / % ^ < > <= >= == !=` plus unary `-`. Params can
 be typed, and multiple overloads can share a name.
 
-```
+```art
 class Vec {
     x = 0
     y = 0
@@ -645,7 +683,7 @@ local s = Vec(1, 2) * 3          // Vec(3, 6)
 
 `==` defines equality; `!=` is derived from it.
 
-```
+```art
 class Vec {
     x = 0
     fun Vec(x) { this.x = x }
@@ -659,7 +697,7 @@ Vec(1) != Vec(2)                 // true, no operator != needed
 Commutative operators try the right operand if the left doesn't
 have a matching overload. This is what lets `2 * v` work:
 
-```
+```art
 class Vec {
     x = 0
     fun Vec(x) { this.x = x }
@@ -679,7 +717,7 @@ errors unless Vec has an `operator -` accepting a number.
 `static fun name()` for methods, `static field = x` for fields.
 Both are accessed through the class, not an instance.
 
-```
+```art
 class Counter {
     static total = 0
 
@@ -706,7 +744,7 @@ Counter.total                    // 0
 `extends` for a superclass. `super(...)` calls the parent's
 constructor; `super.method()` calls a parent method.
 
-```
+```art
 class Animal {
     name = ""
     fun Animal(name) { this.name = name }
@@ -732,7 +770,7 @@ d.parentSpeak()                  // "..."
 A contract. Declarations only, no bodies. Verification runs
 when the class is defined, not when a method is called.
 
-```
+```art
 interface Drawable {
     fun draw()
     get bounds
@@ -748,7 +786,7 @@ class Circle implements Drawable {
 
 Inheritance between interfaces:
 
-```
+```art
 interface Animal { fun breathe() }
 interface Pet extends Animal { fun name() }
 
@@ -762,7 +800,7 @@ Dog() is Animal                   // true
 
 Variadic method requirements:
 
-```
+```art
 interface Logger {
     fun log(level, ...parts)
 }
@@ -784,14 +822,14 @@ The class must accept every arity the interface accepts. A fixed
 
 Named singletons with optional values.
 
-```
+```art
 enum Color { Red, Green, Blue }
 enum Http { OK = 200, NotFound = 404 }
 ```
 
 Reading members and values:
 
-```
+```art
 Color.Red                        // the enum value
 Http.NotFound.value              // 404
 Color.Red.name                   // "Red"
@@ -800,7 +838,7 @@ tostring(Color.Red)              // "Color.Red"
 
 Helpers on the enum itself:
 
-```
+```art
 Color.values()                   // [Red, Green, Blue]
 Color.names()                    // ["Red", "Green", "Blue"]
 Color.fromName("Green")          // Color.Green, or nil
@@ -809,7 +847,7 @@ Http.fromValue(404)              // Http.NotFound, or nil
 
 Membership check with `in`:
 
-```
+```art
 Color.Red in Color               // true
 Other.Red in Color               // false
 ```
@@ -823,15 +861,33 @@ Runtime errors unwind to the nearest error boundary and print
 
 ### Raising
 
-```
+```art
 error("something went wrong")
 ```
 
-### Catching
+The argument can be any value: a string, a table, an
+instance, a number. The value is stored as-is and handed
+back by `attempt()` unchanged. This is what lets a game
+engine throw structured data:
 
-`attempt(fn, ...)` returns `[ok, value_or_message]`.
-
+```art
+error(["code" = 404, "reason" = "not found"])
+error(500)
+error(SomeCustomError("connection refused"))
 ```
+
+Interpreter-level errors (division by zero, undefined
+member, wrong argument count) produce a formatted string as
+the payload, a message with file, line, column, and the
+reason.
+
+###  Catching
+
+`attempt(fn, ...)` returns `[ok, payload]`. On success,
+payload is the return value. On failure, payload is whatever
+was thrown.
+
+```art
 local ok, result = attempt(fun() { return compute() })
 if (ok) {
     print("got " + result)
@@ -840,11 +896,28 @@ if (ok) {
 }
 ```
 
+Structured throws come back structured:
+
+```art
+local ok, info = attempt(fun() {
+    error(["code" = 404, "reason" = "not found"])
+})
+if (!ok) {
+    print("code " + info.code + ": " + info.reason)
+}
+```
+
+Interpreter errors come back as strings:
+
+```art
+local ok, msg = attempt(fun() { 1 / 0 })
+// ok is false, msg is "«file»:«line»:«col»: error: division by zero"
+```
 ### Asserting
 
 `assert(cond)` raises if `cond` is falsy. Optional message:
 
-```
+```art
 assert(entity.hp > 0)
 assert(n >= 0, "n must be non-negative")
 assert(items.length() > 0, "cannot process empty list")
@@ -857,7 +930,7 @@ assert(items.length() > 0, "cannot process empty list")
 `import "path"` loads and evaluates a file. The module's value is
 its top-level `return` (or `nil`). Cached by absolute path.
 
-```
+```art
 local Math2 = import "stdlib/math_extra.art"
 local JSON = import "stdlib/json.art"
 ```
@@ -865,7 +938,7 @@ local JSON = import "stdlib/json.art"
 Paths are relative to the importing file. `.art` extension is
 optional.
 
-```
+```art
 import "utils"                   // looks for ./utils.art
 import "lib/helpers.art"         // explicit
 ```
@@ -878,7 +951,7 @@ Cycles are detected and raise an error.
 
 Global functions always available:
 
-```
+```art
 print(a, b, ...)                 // space-separated, newline after
 tostring(v)                      // string form of any value
 error(msg)                       // raise
@@ -889,7 +962,7 @@ import "path"                    // module loader
 
 ### Math
 
-```
+```art
 Math.pi, Math.tau, Math.e, Math.inf, Math.nan
 
 Math.abs(x)        Math.floor(x)      Math.ceil(x)
@@ -907,7 +980,7 @@ Math.seed(n)                     // deterministic
 
 ### File
 
-```
+```art
 File.read(path)                  // string, or nil on missing
 File.write(path, contents)
 File.append(path, contents)
@@ -924,7 +997,7 @@ f.close()
 
 ### Time
 
-```
+```art
 Time.now()                       // float seconds since epoch
 Time.clock()                     // CPU seconds, monotonic
 Time.sleep(ms)                   // blocks
@@ -951,7 +1024,7 @@ hex digit. Uppercase is the complement.
 
 Returns `[start, end, cap1, ...]` (1-based inclusive), or `nil`.
 
-```
+```art
 "hello world".find("world")       // [7, 11]
 "abc123".find("%d+")              // [4, 6]
 "abc".find("xyz")                 // nil
@@ -963,7 +1036,7 @@ Returns `[start, end, cap1, ...]` (1-based inclusive), or `nil`.
 Returns the whole match, the single capture, or a table of
 captures.
 
-```
+```art
 "abc123".match("%d+")             // "123"
 "key=val".match("(%a+)=(%a+)")    // ["key", "val"]
 "key=val".match("(%a+)=")         // "key"
@@ -974,7 +1047,7 @@ captures.
 
 Returns a table of every match.
 
-```
+```art
 "foo bar baz".gmatch("%a+")       // ["foo", "bar", "baz"]
 "a=1,b=2".gmatch("(%a+)=(%d+)")   // [["a", "1"], ["b", "2"]]
 ```
@@ -985,7 +1058,7 @@ Replace all matches. Replacement can be a string with `%0`
 (whole match), `%1..%9` (captures), `%%` (literal), or a
 function called with the captures.
 
-```
+```art
 "a-b-c".gsub("-", "+")                       // "a+b+c"
 "a=1,b=2".gsub("(%a+)=(%d+)", "%2:%1")       // "1:a,2:b"
 "cat".gsub("a", "[%0]")                      // "c[a]t"
@@ -994,7 +1067,7 @@ function called with the captures.
 
 Limit replacements with a third argument:
 
-```
+```art
 "a-b-c-d".gsub("-", "+", 2)                  // "a+b+c-d"
 ```
 
@@ -1004,7 +1077,7 @@ Limit replacements with a third argument:
 
 `is` for both builtin types and user classes/interfaces.
 
-```
+```art
 5 is Int                         // true
 5.0 is Int                       // false
 5 is Number                      // true
@@ -1026,7 +1099,7 @@ Builtin type names: `Any`, `Number`, `Int`, `Float`, `String`,
 
 `in` works on tables, strings, and enums.
 
-```
+```art
 2 in [1, 2, 3]                   // true, array value
 "x" in ["x" = 1]                 // true, hash key
 "xyz" in "hello"                 // false, substring
@@ -1045,7 +1118,7 @@ that.
 A binary operator or `.` at the start of a line continues the
 previous expression. Anything else starts a new statement.
 
-```
+```art
 local total = 1 +
     2 +
     3
@@ -1064,7 +1137,7 @@ local names = people
 After `.`, a keyword can be used as a member name. This lets
 methods be called `get`, `set`, `class`, `static`, etc.
 
-```
+```art
 class A {
     fun A() { }
     fun get() { return 1 }
@@ -1097,3 +1170,84 @@ stack switching.
 and use multi-assignment to unpack it.
 - **Range operator (`..`)**, not implemented. `for-range` uses
 `->`, table slicing uses `.slice(a, b)`.
+
+## Known limitations
+
+Things that work but have caveats. Not bugs — decisions that
+trade simplicity for something else, and the cost is worth
+documenting so it isn't rediscovered as a surprise.
+
+### Intern table growth
+
+Every string ART creates goes into `S->strings`, and that table
+is a GC root. So strings are never freed. A loop that produces
+N unique strings leaves N permanent entries.
+
+    for (local i = 1 -> 10000) {
+        local msg = "tick " + i
+        log(msg)          // "tick 1", "tick 2", ... all retained
+    }
+
+Long-running processes that generate unique strings — log lines,
+save-file paths, formatted timestamps — will grow memory
+unboundedly. Games running for hours will notice.
+
+This is a design consequence of interning everything, and the
+alternative costs more than it saves right now. Fixing it means
+either weak references in the intern table (needs a new GC pass
+to prune dead entries) or splitting strings into interned vs.
+transient classes (needs a new variant of every string API).
+
+**Target for: the VM rewrite.** String constant ownership
+changes there anyway.
+
+### Recursion limits
+
+Two hard caps, both to prevent stack overflow:
+
+- `ART_FRAMES_MAX` (2048) — nesting depth of function calls.
+  A too-deep recursion raises `call depth limit reached`
+  rather than crashing.
+- `PARSER_MAX_DEPTH` (500) — expression nesting depth in the
+  parser. `(((((...)))))` past 500 raises
+  `expression nesting too deep` rather than blowing the C
+  stack.
+
+Both are generous for hand-written code and small for
+adversarial input. Neither is adjustable without recompiling.
+
+### Rendering caps
+
+Table rendering truncates with `, ...` past 512 characters of
+output, and stops descending at depth 4 for cyclic structures.
+Both are to keep `print(giantTable)` from printing megabytes
+or looping forever, but they mean `tostring(hugeTable)` isn't
+lossless.
+
+If you need the full structure, walk it manually with `keys()`
+and `values()`.
+
+### No sandboxing
+
+`File.read`, `File.write`, and friends are unconditionally
+available to any script. If your engine loads untrusted
+scripts — user-authored mods, downloaded maps — you either
+strip the `file` and `time` features before building, or you
+don't run untrusted code.
+
+There's no runtime flag to disable them. The feature registry
+exists (`FEATURES(X)` in `features.h`), but nothing exposes a
+"which features to install" knob through `art_open`. That
+would be a small addition if anyone needs it.
+
+### No async, no coroutines
+
+Scripts run to completion. There's no way to write "wait 3
+seconds, then do this" as linear code. The engine either
+schedules the resume itself (state machine in the script) or
+the script blocks the frame (`Time.sleep`).
+
+This is a real gap for game engines. It's also the reason
+several things in ART are simpler than they'd otherwise be —
+the whole runtime assumes a single-threaded, synchronous call
+stack.

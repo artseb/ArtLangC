@@ -16,6 +16,7 @@
 
 static Node *parse_decl(Parser *P);
 static Node *parse_while(Parser *P);
+static Node *parse_repeat(Parser *P);
 static Node *parse_for(Parser *P);
 static Node *parse_return(Parser *P);
 static Node *parse_break(Parser *P);
@@ -38,6 +39,7 @@ void parser_init(ArtState *S)
     parser_register_stmt(TOKEN_LOCAL, parse_decl);
     parser_register_stmt(TOKEN_IF, parse_if_any);
     parser_register_stmt(TOKEN_WHILE, parse_while);
+    parser_register_stmt(TOKEN_REPEAT, parse_repeat);
     parser_register_stmt(TOKEN_FOR, parse_for);
     parser_register_stmt(TOKEN_RETURN, parse_return);
     parser_register_stmt(TOKEN_BREAK, parse_break);
@@ -259,6 +261,35 @@ static Node *parse_while(Parser *P)
         return NULL;
 
     return node_while(while_tok.line, while_tok.column, cond, body);
+}
+
+static Node *parse_repeat(Parser *P)
+{
+    Token repeat_tok = P->previous;
+
+    Node *body = parse_block(P);
+    if (body == NULL)
+        return NULL;
+
+    if (!parser_match(P, TOKEN_UNTIL))
+    {
+        parser_error(P, "expected 'until' after repeat body");
+        node_free_tree(&body);
+        return NULL;
+    }
+
+    parser_consume(P, TOKEN_LEFT_PAREN,
+                   "expected '(' after 'until'");
+    Node *cond = parse_expression(P);
+    if (cond == NULL)
+    {
+        node_free_tree(&body);
+        return NULL;
+    }
+    parser_consume(P, TOKEN_RIGHT_PAREN,
+                   "expected ')' after condition");
+
+    return node_repeat(repeat_tok.line, repeat_tok.column, body, cond);
 }
 
 static Node *parse_for(Parser *P)

@@ -299,6 +299,7 @@ ObjString *obj_string_take_utf16(ArtState *S, uint16_t *units, int unit_count);
 ObjString *obj_string_intern_utf16(ArtState *S, const uint16_t *units, int unit_count);
 
 ObjString *obj_string_concat(ArtState *S, ObjString *a, ObjString *b);
+ObjString *obj_string_concat_all(ArtState *S, ObjString **pieces, int count);
 ObjString *obj_string_substring(ArtState *S, ObjString *s,
                                 int start_char, int end_char);
 char *obj_string_to_utf8(ObjString *s);

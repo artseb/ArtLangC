@@ -7,6 +7,14 @@
 #include "state.h"
 #include "features/registry.h"
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((noreturn))
+#elif defined(_MSC_VER)
+__declspec(noreturn)
+#endif
+void art_runtime_error(ArtState *S, Node *at, const char *fmt, ...);
+void art_throw_value(ArtState *S, Node *at, Value v);
+
 Value art_run_source(ArtState *S, const char *source, int length,
                      const char *file_name);
 
@@ -20,8 +28,6 @@ Value eval_unary(ArtState *S, Node *n);
 Value eval_fun_decl(ArtState *S, Node *n);
 Value eval_call(ArtState *S, Node *n);
 Value call_any(ArtState *S, Value callee, int argc, Value *args, Node *at);
-
-void art_runtime_error(ArtState *S, Node *at, const char *fmt, ...);
 
 void interp_init(ArtState *S);
 

@@ -38,12 +38,8 @@ static Value builtin_tostring(ArtState *S, int argc, Value *argv)
 static Value builtin_error(ArtState *S, int argc, Value *argv)
 {
     (void)argc;
-    if (!IS_STRING(argv[0]))
-        art_runtime_error(S, S->current_node, "error expects a string");
-
-    char *msg = obj_string_to_utf8(AS_STRING(argv[0]));
-    art_runtime_error(S, S->current_node, "%s", msg);
-    return NIL_VAL;
+    art_throw_value(S, S->current_node, argv[0]);
+    return NIL_VAL; // unreachable
 }
 
 // assert(cond) or assert(cond, message)
@@ -74,27 +70,17 @@ static Value builtin_assert(ArtState *S, int argc, Value *argv)
 }
 
 static Value attempt_build_result(ArtState *S, bool ok,
-                                  Value value, const char *msg)
+                                  Value value, Value thrown)
 {
+    GC_PUSH(S, ok ? value : thrown);
+
     ObjTable *out = obj_table_new(S);
     GC_PUSH(S, OBJ_VAL(out));
 
     table_push(S, out, BOOL_VAL(ok));
-    if (ok)
-    {
-        GC_PUSH(S, value);
-        table_push(S, out, value);
-        GC_POP(S, 1);
-    }
-    else
-    {
-        ObjString *m = obj_string_from_utf8(S, msg, (int)strlen(msg));
-        GC_PUSH(S, OBJ_VAL(m));
-        table_push(S, out, OBJ_VAL(m));
-        GC_POP(S, 1);
-    }
+    table_push(S, out, ok ? value : thrown);
 
-    GC_POP(S, 1);
+    GC_POP(S, 2);
     return OBJ_VAL(out);
 }
 
@@ -113,6 +99,7 @@ static Value builtin_attempt(ArtState *S, int argc, Value *argv)
     Value saved_return = S->return_value;
     int saved_frames = S->frame_count;
     ObjClass *saved_class = S->active_class;
+    Value saved_thrown = S->thrown_value;
 
     ErrorFrame frame;
     frame.prev = S->error_frame;
@@ -121,7 +108,10 @@ static Value builtin_attempt(ArtState *S, int argc, Value *argv)
     frame.message[0] = '\0';
     S->error_frame = &frame;
 
+    S->thrown_value = NIL_VAL;
+
     Value result = NIL_VAL;
+    Value volatile thrown = NIL_VAL;
     bool ok = true;
 
     if (setjmp(frame.buf) == 0)
@@ -131,6 +121,7 @@ static Value builtin_attempt(ArtState *S, int argc, Value *argv)
     else
     {
         ok = false;
+        thrown = S->thrown_value;
     }
 
     S->error_frame = saved_frame;
@@ -139,8 +130,9 @@ static Value builtin_attempt(ArtState *S, int argc, Value *argv)
     S->return_value = saved_return;
     S->frame_count = saved_frames;
     S->active_class = saved_class;
+    S->thrown_value = saved_thrown;
 
-    return attempt_build_result(S, ok, result, frame.message);
+    return attempt_build_result(S, ok, result, thrown);
 }
 
 static void misc_register_builtins(ArtState *S)

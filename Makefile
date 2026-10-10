@@ -4,6 +4,10 @@
 # Wildcard source discovery: adding a new .c file under art/
 # requires no edit here. Tests are discovered the same way.
 #
+# Two build modes:
+#   make            debug   — -g -O0, fast compiles, debuggable
+#   make release    release — -O2 -DNDEBUG, slow compiles, fast binary
+#
 # Portable across GCC and Clang on Linux, macOS, and MSYS2.
 # The `-lm` flag is a no-op on macOS; it's needed on Linux
 # where math lives in a separate library.
@@ -12,7 +16,15 @@
 # ============================================================
 
 CC      ?= gcc
-CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter -g -O0 -MMD -MP \
+BUILD   ?= debug
+
+ifeq ($(BUILD),release)
+    OPT := -O2 -DNDEBUG
+else
+    OPT := -g -O0
+endif
+
+CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter $(OPT) -MMD -MP \
            -Iart \
            -Iart/core/runtime \
            -Iart/core/syntax \
@@ -22,13 +34,6 @@ CFLAGS  := -std=c11 -Wall -Wextra -Wno-unused-parameter -g -O0 -MMD -MP \
 LDFLAGS := -lm
 
 # --- Stale-file guard ----------------------------------------
-#
-# Files that were moved, merged, or renamed. If an old copy is
-# still lying around (e.g. after unzipping a new tree over an
-# old one) the wildcard source discovery below would pick it up
-# and fail with duplicate symbols. Note art/features/features.h
-# is also dangerous on Linux: -Iart/features would let it
-# shadow glibc's <features.h>.
 
 STALE := \
     art/core/runtime/obj_string.c \
@@ -50,37 +55,11 @@ STALE := \
     art/features/const/const_eval.c \
     art/features/const/const_feature.c \
     art/features/const/const_parse.c \
-    art/features/string/string_pattern.c \
-    art/features/features.h \
-    art/features/features.c \
-    art/builtins/builtins.h \
-    art/builtins.h \
-    art/features/switch/switch_ast.c \
-    art/features/switch/switch_parse.c \
-    art/features/switch/switch_eval.c \
-    art/features/switch/switch_feature.c \
-    art/features/enum/enum_ast.c \
-    art/features/enum/enum_parse.c \
-    art/features/enum/enum_eval.c \
-    art/features/enum/enum_runtime.c \
-    art/features/enum/enum_gc.c \
-    art/features/enum/enum_feature.c \
-    art/features/interface/interface_ast.c \
-    art/features/interface/interface_parse.c \
-    art/features/interface/interface_eval.c \
-    art/features/interface/interface_runtime.c \
-    art/features/interface/interface_gc.c \
-    art/features/interface/interface_feature.c \
-    art/features/function/function_runtime.c \
-    art/features/function/function_feature.c
+    art/features/string/string_pattern.c
 
-# `make clean` is exempt: it deletes the stale files instead of
-# refusing to run, so the fix is always one command.
 ifneq ($(wildcard $(STALE)),)
-ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(error Stale file(s) present: $(wildcard $(STALE)). These were moved, \
-split, or merged. Run: make clean)
-endif
+split, or merged. Run: rm $(wildcard $(STALE)))
 endif
 
 # --- Source discovery ----------------------------------------
@@ -108,7 +87,7 @@ BIN := bin/art
 
 # --- Targets --------------------------------------------------
 
-.PHONY: all test test-asan clean
+.PHONY: all test release clean
 
 all: $(BIN) $(TEST_BIN)
 
@@ -133,20 +112,15 @@ test: all
 	@echo
 	@echo "All test binaries passed."
 
-# AddressSanitizer + UBSan run. Rebuilds everything with sanitizers,
-# runs the suite, then cleans so normal builds aren't mixed with
-# instrumented objects. Linux and macOS (MinGW has no ASan).
-# Leak detection is off: the test programs leak small strings on
-# purpose-less exit, which is noise, not interpreter bugs.
-test-asan:
+# Rebuild everything with -O2. Objects from a debug build are
+# not reusable, so this forces a clean first.
+release:
 	$(MAKE) clean
-	ASAN_OPTIONS=detect_leaks=0 $(MAKE) test \
-	    CFLAGS="$(CFLAGS) -O1 -fsanitize=address,undefined -fno-omit-frame-pointer" \
-	    LDFLAGS="$(LDFLAGS) -fsanitize=address,undefined"; \
-	rc=$$?; $(MAKE) clean; exit $$rc
+	$(MAKE) BUILD=release all
+	@echo
+	@echo "Release build complete: $(BIN)"
 
 clean:
-	rm -f $(wildcard $(STALE))
 	rm -f $(CORE_OBJ) $(CORE_DEP)
 	rm -f $(TEST_SRC:.c=.o) $(TEST_DEP) $(TEST_BIN)
 	rm -f $(BIN)

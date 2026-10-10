@@ -2,6 +2,7 @@
 #define ART_H
 
 #include <stdbool.h>
+#include "value.h"
 
 // ============================================================
 // ART embed API
@@ -31,5 +32,38 @@ bool art_run_string(ArtState *S, const char *source, const char *name);
 
 // Read a file and run it. Returns false on I/O or runtime error.
 bool art_run_file(ArtState *S, const char *path);
+
+// ============================================================
+// Native function registration
+//
+// A native function is a C callback that ART scripts call like
+// any other function. It receives the argument count, an array
+// of Values, and returns a Value.
+//
+//   static Value my_log(ArtState *S, int argc, Value *argv)
+//   {
+//       for (int i = 0; i < argc; i++) {
+//           ObjString *s = value_to_string(S, argv[i]);
+//           char *u = obj_string_to_utf8(s);
+//           fputs(u, stdout);
+//           free(u);
+//       }
+//       fputc('\n', stdout);
+//       return NIL_VAL;
+//   }
+//
+//   art_register_native(S, "Log", my_log, -1);
+//
+// Arity: a non-negative integer requires exactly that many
+// arguments; -1 means variadic. Registration is global-scope
+// only. To install methods on a class, use the internal
+// `art_define_method` from `core/runtime/register.h`.
+//
+// The NativeFn type is defined in value.h as:
+//   typedef Value (*NativeFn)(ArtState *S, int argc, Value *argv);
+// ============================================================
+
+void art_register_native(ArtState *S, const char *name,
+                         NativeFn fn, int arity);
 
 #endif // ART_H

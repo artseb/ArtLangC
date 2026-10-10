@@ -71,13 +71,26 @@ static ObjString *render_table(ArtState *S, ObjTable *t)
     if (!has_arr && !has_hash)
         return obj_string_from_utf8(S, "[]", 2);
 
-    // A table with only hash entries renders as {"k": v, ...}.
-    // Anything with an array part renders as [v, v, "k": v] so
-    // both halves are visible in one bracket.
-    ObjString *open = obj_string_from_utf8(S, has_arr ? "[" : "{", 1);
-    ObjString *close = obj_string_from_utf8(S, has_arr ? "]" : "}", 1);
+    // Collect pieces, then concat once. Building an accumulator
+    // with obj_string_concat in a loop is O(n²) AND leaves every
+    // intermediate result in the intern table permanently.
+    int cap = 16;
+    int count = 0;
+    ObjString **pieces = malloc(sizeof(ObjString *) * cap);
 
-    ObjString *result = open;
+#define PUSH_PIECE(p)                                            \
+    do                                                           \
+    {                                                            \
+        if (count >= cap)                                        \
+        {                                                        \
+            cap *= 2;                                            \
+            pieces = realloc(pieces, sizeof(ObjString *) * cap); \
+        }                                                        \
+        pieces[count++] = (p);                                   \
+    } while (0)
+
+    PUSH_PIECE(obj_string_from_utf8(S, has_arr ? "[" : "{", 1));
+
     int total_len = 0;
     bool first = true;
     bool truncated = false;
@@ -86,14 +99,13 @@ static ObjString *render_table(ArtState *S, ObjTable *t)
     {
         if (!first)
         {
-            ObjString *sep = obj_string_from_utf8(S, ", ", 2);
-            result = obj_string_concat(S, result, sep);
+            PUSH_PIECE(obj_string_from_utf8(S, ", ", 2));
             total_len += 2;
         }
         first = false;
 
         ObjString *elem = render_element(S, t->array[i]);
-        result = obj_string_concat(S, result, elem);
+        PUSH_PIECE(elem);
         total_len += elem->unit_count;
 
         if (total_len > RENDER_CHAR_LIMIT)
@@ -110,22 +122,20 @@ static ObjString *render_table(ArtState *S, ObjTable *t)
 
             if (!first)
             {
-                ObjString *sep = obj_string_from_utf8(S, ", ", 2);
-                result = obj_string_concat(S, result, sep);
+                PUSH_PIECE(obj_string_from_utf8(S, ", ", 2));
                 total_len += 2;
             }
             first = false;
 
             ObjString *key = quote_string(S, e->key);
-            result = obj_string_concat(S, result, key);
+            PUSH_PIECE(key);
             total_len += key->unit_count;
 
-            ObjString *colon = obj_string_from_utf8(S, ": ", 2);
-            result = obj_string_concat(S, result, colon);
+            PUSH_PIECE(obj_string_from_utf8(S, ": ", 2));
             total_len += 2;
 
             ObjString *val = render_element(S, e->value);
-            result = obj_string_concat(S, result, val);
+            PUSH_PIECE(val);
             total_len += val->unit_count;
 
             if (total_len > RENDER_CHAR_LIMIT)
@@ -134,12 +144,14 @@ static ObjString *render_table(ArtState *S, ObjTable *t)
     }
 
     if (truncated)
-    {
-        ObjString *ellipsis = obj_string_from_utf8(S, ", ...", 5);
-        result = obj_string_concat(S, result, ellipsis);
-    }
+        PUSH_PIECE(obj_string_from_utf8(S, ", ...", 5));
 
-    result = obj_string_concat(S, result, close);
+    PUSH_PIECE(obj_string_from_utf8(S, has_arr ? "]" : "}", 1));
+
+#undef PUSH_PIECE
+
+    ObjString *result = obj_string_concat_all(S, pieces, count);
+    free(pieces);
     return result;
 }
 

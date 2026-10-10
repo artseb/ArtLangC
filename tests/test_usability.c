@@ -145,21 +145,23 @@ int main(void)
     // Bare-name suggestion inside a method
     // ============================================================
 
-    expect_error(S, "bare field name errors with suggestion",
-                 "class A {\n"
-                 "    name = \"x\"\n"
-                 "    fun A() { }\n"
-                 "    fun fetch() { return name }\n"
-                 "}\n"
-                 "A().fetch()\n");
+    expect(S, "bare field name resolves to this.name",
+           "class A {\n"
+           "    name = \"x\"\n"
+           "    fun A() { }\n"
+           "    fun fetch() { return name }\n"
+           "}\n"
+           "A().fetch()",
+           "x");
 
-    expect_error(S, "bare method name errors with suggestion",
-                 "class A {\n"
-                 "    fun A() { }\n"
-                 "    fun hello() { return \"hi\" }\n"
-                 "    fun fetch() { return hello() }\n"
-                 "}\n"
-                 "A().fetch()\n");
+    expect(S, "bare method name resolves to this.method",
+           "class A {\n"
+           "    fun A() { }\n"
+           "    fun hello() { return \"hi\" }\n"
+           "    fun fetch() { return hello() }\n"
+           "}\n"
+           "A().fetch()",
+           "hi");
 
     expect(S, "undefined variable outside method is nil",
            "definitely_not_defined_anywhere",

@@ -29,6 +29,7 @@ ArtState *art_state_new(void)
     S->current_file = NULL;
     S->active_class = NULL;
     S->last_error = false;
+    S->thrown_value = NIL_VAL;
 
     S->import_cache = obj_table_new(S);
     S->imports_in_progress = obj_table_new(S);

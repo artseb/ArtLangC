@@ -45,6 +45,8 @@ Value instance_get_member(ArtState *S, ObjInstance *inst,
                           ObjString *name, Node *at);
 Value instance_set_member(ArtState *S, ObjInstance *inst,
                           ObjString *name, Value v, Node *at);
+bool instance_try_get_member(ArtState *S, ObjInstance *inst,
+                             ObjString *name, Value *out, Node *at);
 
 bool class_free_children(Node *n);
 const char *class_node_name(NodeType t);

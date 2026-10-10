@@ -30,6 +30,7 @@ Value eval_assign(ArtState *S, Node *n);
 Value eval_block(ArtState *S, Node *n);
 Value eval_if(ArtState *S, Node *n);
 Value eval_while(ArtState *S, Node *n);
+Value eval_repeat(ArtState *S, Node *n);
 Value eval_for_range(ArtState *S, Node *n);
 Value eval_return(ArtState *S, Node *n);
 Value eval_break(ArtState *S, Node *n);
@@ -55,6 +56,7 @@ static EvalFn const eval_table[NODE_TYPE_COUNT] = {
     [NODE_BLOCK] = eval_block,
     [NODE_IF] = eval_if,
     [NODE_WHILE] = eval_while,
+    [NODE_REPEAT] = eval_repeat,
     [NODE_FOR_RANGE] = eval_for_range,
     [NODE_FOR_IN] = eval_for_in,
     [NODE_RETURN] = eval_return,

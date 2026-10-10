@@ -58,6 +58,7 @@ struct ArtState
 
     ControlFlow control;
     Value return_value;
+    Value thrown_value;
 
     ObjTable *strings;
     ObjTable *globals;

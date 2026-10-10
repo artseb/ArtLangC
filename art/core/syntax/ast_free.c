@@ -88,6 +88,13 @@ static void free_children(Node *n)
         node_free_tree(&w->body);
         break;
     }
+    case NODE_REPEAT:
+    {
+        RepeatNode *r = (RepeatNode *)n;
+        node_free_tree(&r->body);
+        node_free_tree(&r->cond);
+        break;
+    }
     case NODE_FOR_RANGE:
     {
         ForRangeNode *f = (ForRangeNode *)n;
@@ -201,30 +208,31 @@ const char *node_type_name(NodeType t)
 
     switch (t)
     {
-    case NODE_LITERAL:    return "literal";
-    case NODE_VAR:        return "variable";
-    case NODE_BINARY:     return "binary expression";
-    case NODE_UNARY:      return "unary expression";
-    case NODE_CALL:       return "call";
-    case NODE_INDEX:      return "index";
-    case NODE_MEMBER:     return "member access";
-    case NODE_ASSIGN:     return "assignment";
-    case NODE_DECL:       return "declaration";
-    case NODE_IF:         return "if";
-    case NODE_WHILE:      return "while";
-    case NODE_FOR_RANGE:  return "for range";
-    case NODE_FOR_IN:     return "for in";
-    case NODE_BLOCK:      return "block";
-    case NODE_RETURN:     return "return";
-    case NODE_BREAK:      return "break";
-    case NODE_CONTINUE:   return "continue";
-    case NODE_FUN_DECL:   return "function declaration";
-    case NODE_TABLE:      return "table literal";
-    case NODE_INTERP:     return "interp";
-    case NODE_MULTI_DECL: return "multi_decl";
-    case NODE_IS:         return "is";
-    case NODE_TYPE_COUNT: return "<invalid>";
-    default:              return "nil";
+    case NODE_LITERAL:          return "literal";
+    case NODE_VAR:              return "variable";
+    case NODE_BINARY:           return "binary expression";
+    case NODE_UNARY:            return "unary expression";
+    case NODE_CALL:             return "call";
+    case NODE_INDEX:            return "index";
+    case NODE_MEMBER:           return "member access";
+    case NODE_ASSIGN:           return "assignment";
+    case NODE_DECL:             return "declaration";
+    case NODE_IF:               return "if";
+    case NODE_WHILE:            return "while";
+    case NODE_REPEAT:           return "repeat";
+    case NODE_FOR_RANGE:        return "for range";
+    case NODE_FOR_IN:           return "for in";
+    case NODE_BLOCK:            return "block";
+    case NODE_RETURN:           return "return";
+    case NODE_BREAK:            return "break";
+    case NODE_CONTINUE:         return "continue";
+    case NODE_FUN_DECL:         return "function declaration";
+    case NODE_TABLE:            return "table literal";
+    case NODE_INTERP:           return "interp";
+    case NODE_MULTI_DECL:       return "multi_decl";
+    case NODE_IS:               return "is";
+    case NODE_TYPE_COUNT:       return "<invalid>";
+    default:                    return "nil";
     }
     return "unknown";
 }

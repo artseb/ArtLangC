@@ -10,28 +10,29 @@
 typedef struct Node Node;
 typedef struct ObjFunction ObjFunction;
 
-#define CORE_NODES(X)         \
-    X(LITERAL)                \
-    X(VAR)                    \
-    X(BINARY)                 \
-    X(UNARY)                  \
-    X(CALL)                   \
-    X(INDEX)                  \
-    X(MEMBER)                 \
-    X(ASSIGN)                 \
-    X(DECL)                   \
-    X(IF)                     \
-    X(WHILE)                  \
-    X(FOR_RANGE)              \
-    X(FOR_IN)                 \
-    X(BLOCK)                  \
-    X(RETURN)                 \
-    X(BREAK)                  \
-    X(CONTINUE)               \
-    X(FUN_DECL)               \
-    X(TABLE)                  \
-    X(INTERP)                 \
-    X(MULTI_DECL)             \
+#define CORE_NODES(X) \
+    X(LITERAL)        \
+    X(VAR)            \
+    X(BINARY)         \
+    X(UNARY)          \
+    X(CALL)           \
+    X(INDEX)          \
+    X(MEMBER)         \
+    X(ASSIGN)         \
+    X(DECL)           \
+    X(IF)             \
+    X(WHILE)          \
+    X(REPEAT)         \
+    X(FOR_RANGE)      \
+    X(FOR_IN)         \
+    X(BLOCK)          \
+    X(RETURN)         \
+    X(BREAK)          \
+    X(CONTINUE)       \
+    X(FUN_DECL)       \
+    X(TABLE)          \
+    X(INTERP)         \
+    X(MULTI_DECL)     \
     X(IS)
 
 // --- feature node lists (kept here so the full node set is in one place) ---
@@ -176,6 +177,13 @@ typedef struct WhileNode
     Node *body;
 } WhileNode;
 
+typedef struct RepeatNode
+{
+    Node base;
+    Node *body;
+    Node *cond;
+} RepeatNode;
+
 typedef struct ForRangeNode
 {
     Node base;
@@ -263,6 +271,7 @@ Node *node_assign(int line, int col, Node *target, TokenType op, Node *value);
 Node *node_decl(int line, int col, ObjString *name, Node *value, uint32_t flags);
 Node *node_if(int line, int col, Node *cond, Node *then_b, Node *else_b);
 Node *node_while(int line, int col, Node *cond, Node *body);
+Node *node_repeat(int line, int col, Node *body, Node *cond);
 Node *node_for_range(int line, int col, Node *init, Node *end, Node *step, Node *body);
 Node *node_for_in(int line, int col, Node *key, Node *value, Node *iterable, Node *body);
 Node *node_block(int line, int col, Node **stmts, int count);

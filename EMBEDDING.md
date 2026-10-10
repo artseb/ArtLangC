@@ -33,7 +33,7 @@ the four functions. This is what the `art_lib` target in
 If your engine is C++, the ART sources compile as C++-compatible
 C. Wrap the includes in `extern "C"` at the call sites:
 
-```
+```c+
 extern "C" {
     #include "art.h"
 }
@@ -51,13 +51,13 @@ Build ART as a DLL. The current CMake sets `art_lib` to
 `STATIC` — you'll want to add a shared variant, or flip the
 setting:
 
-```
+```cmake
 add_library(art_lib SHARED ${CORE_SRC})
 ```
 
 Then P/Invoke from C#:
 
-```
+```c#
 using System;
 using System.Runtime.InteropServices;
 
@@ -115,26 +115,134 @@ GDExtension has its own build system and learning curve. A
 weekend for someone comfortable with Godot's C++ API, longer
 otherwise.
 
-## What to build in order
+## Worked example: engine calls script, script calls engine
 
-1. **Static link a hello-world.** Open an `ArtState`, run
-`print("hi")`, close. Verify the binary actually runs.
-2. **Expose a native function.** Add `art_register_native(S,
-"Log", my_log_fn)` to `art.h` (about 20 lines — the
-internals already support it). Now scripts can call back
-into the engine.
-3. **Pass a number in, get a number out.** `art_run_string`
-returns the value of the last expression as a `Value`. Add
-a public accessor for `int`/`float`/`string`, and the engine
-can call a script and use the result.
-4. **Error retrieval.** Add `const char *art_last_error(ArtState
-*S)`. Currently errors go to stderr; engines want them as a
-string they can log or display.
-5. **Value marshaling.** Tables in, tables out. This is where
-it gets fiddly and where you'll spend the most time.
+The full round-trip an engine actually needs. Six steps, one
+C file, about 40 lines.
 
-Steps 1–3 are a day's work. Step 4 is an afternoon. Step 5 is
-open-ended.
+### 1. Hello world
+
+```c
+#include "art.h"
+
+int main(void)
+{
+    ArtState *S = art_open();
+    art_run_string(S, "print(\"hello from ART\")", "<embed>");
+    art_close(S);
+    return 0;
+}
+```
+
+Build it, run it, see the print. Everything else builds on this.
+
+### 2. Native Function
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include "art.h"
+
+// The engine-side implementation.
+static Value engine_log(ArtState *S, int argc, Value *argv)
+{
+    for (int i = 0; i < argc; i++) {
+        ObjString *s = value_to_string(S, argv[i]);
+        char *u = obj_string_to_utf8(s);
+        fputs(u, stdout);
+        free(u);
+        if (i < argc - 1) fputc(' ', stdout);
+    }
+    fputc('\n', stdout);
+    return NIL_VAL;
+}
+
+int main(void)
+{
+    ArtState *S = art_open();
+    art_register_native(S, "EngineLog", engine_log, -1);
+
+    art_run_string(S,
+        "EngineLog(\"loading level\", 3, \"entities\")",
+        "<embed>");
+
+    art_close(S);
+    return 0;
+}
+```
+
+Now scripts can call `EngineLog(...)` and it lands in the engine.
+
+### 3. Value accessors for result
+`art_run_string` currently returns `bool`, success or failure. To get
+the value of the last expression, drop to `art_run_source`:
+
+```c
+#include "interp.h"      // for art_run_source
+#include "state.h"       // for ArtState's fields
+
+Value art_run_value(ArtState *S, const char *source, const char *name)
+{
+    return art_run_source(S, source, (int)strlen(source), name);
+}
+```
+
+Then inspect the returned `Value` directly. The macros are in `value.h`:
+
+```c
+Value v = art_run_value(S, "6 * 7", "<embed>");
+if (IS_INT(v))
+    printf("result = %lld\n", (long long)AS_INT(v));
+if (IS_STRING(v)) {
+    char *s = obj_string_to_utf8(AS_STRING(v));
+    printf("result = %s\n", s);
+    free(s);
+}
+```
+
+### 4. Pass a number in
+Bind a global, then read it back from the script:
+
+```c
+ObjString *key = obj_string_from_utf8(S, "input", 5);
+table_set(S, S->globals, key, INT_VAL(42));
+
+Value v = art_run_value(S, "input * 2", "<embed>");
+// v is INT_VAL(84)
+```
+
+Or through `register.h`'s helpers if you prefer not to touch S->globals
+directly:
+```c
+art_define_global(S, "input", INT_VAL(42));
+```
+
+### 5. Structured error value
+
+`error(v)` accepts any value; `attempt` hands it back unchanged:
+
+```art
+local ok, detail = attempt(fun() {
+    error(["code" = 404, "msg" = "not found"])
+})
+
+if (!ok) {
+    EngineLog("script failed:", detail.code, detail.msg)
+}
+```
+
+From the engine's side, this is what makes distinguishing "file
+not found" from "permission denied" possible without
+string-parsing.
+
+### 6. What's left
+
+Value marshaling both ways. Tables in, tables out. Walk the
+array and hash parts of an `ObjTable` and convert each element.
+Tedious but mechanical.
+
+Error retrieval as a string. Add `const char *art_last_error(S)`
+if your engine wants to log errors somewhere other than stderr.
 
 ## What doesn't work today
 

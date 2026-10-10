@@ -54,19 +54,6 @@ static void expect(ArtState *S, const char *label,
     }
 }
 
-static void expect_error(ArtState *S, const char *label, const char *src)
-{
-    art_run_source(S, src, (int)strlen(src), "<test>");
-    checks++;
-    if (!S->last_error)
-    {
-        failed++;
-        fprintf(stderr, "FAIL: %s -- expected runtime error, got none\n",
-                label);
-    }
-    S->last_error = false;
-}
-
 int main(void)
 {
     printf("ART sugar tests\n");

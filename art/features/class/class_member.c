@@ -118,6 +118,52 @@ Value instance_set_member(ArtState *S, ObjInstance *inst,
     return NIL_VAL;
 }
 
+bool instance_try_get_member(ArtState *S, ObjInstance *inst,
+                             ObjString *name, Value *out, Node *at)
+{
+    // 1. Field
+    ObjClass *owner = NULL;
+    Field *f = find_field(inst->klass, name, &owner);
+    if (f != NULL)
+    {
+        if (f->is_private && S->active_class != owner)
+            art_runtime_error(S, at, "field '%s' is private",
+                              obj_string_to_utf8(name));
+        *out = table_get(inst->fields, name);
+        return true;
+    }
+
+    // 2. Getter
+    ObjClosure *getter = find_getter(inst->klass, name);
+    if (getter != NULL)
+    {
+        *out = call_method(S, getter, OBJ_VAL(inst), 0, NULL, at);
+        return true;
+    }
+
+    // 3. Method — return a bound method. Overload is picked at
+    //    call time, not here.
+    for (ObjClass *c = inst->klass; c != NULL; c = c->superclass)
+    {
+        Value v = table_get(c->methods, name);
+        if (IS_TABLE(v))
+        {
+            ObjTable *ov = AS_TABLE(v);
+            if (ov->array_count > 0)
+            {
+                ObjClosure *cl = AS_CLOSURE(ov->array[0]);
+                ObjBoundMethod *bm = obj_bound_method_new(
+                    S, OBJ_VAL(inst), OBJ_VAL(cl));
+                bm->start_class = c;
+                *out = OBJ_VAL(bm);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 Value interp_this(ArtState *S, Node *at)
 {
     Value v;

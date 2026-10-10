@@ -164,6 +164,33 @@ Value eval_while(ArtState *S, Node *n)
     return NIL_VAL;
 }
 
+Value eval_repeat(ArtState *S, Node *n)
+{
+    RepeatNode *r = (RepeatNode *)n;
+
+    for (;;)
+    {
+        art_eval(S, r->body);
+
+        if (S->control == CONTROL_BREAK)
+        {
+            S->control = CONTROL_NONE;
+            break;
+        }
+        if (S->control == CONTROL_RETURN)
+            return NIL_VAL;
+        if (S->control == CONTROL_CONTINUE)
+            S->control = CONTROL_NONE;
+
+        Value c = art_eval(S, r->cond);
+        if (S->control != CONTROL_NONE)
+            return NIL_VAL;
+        if (!value_is_falsy(c))
+            break;
+    }
+    return NIL_VAL;
+}
+
 Value eval_for_range(ArtState *S, Node *n)
 {
     ForRangeNode *f = (ForRangeNode *)n;

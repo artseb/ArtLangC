@@ -261,25 +261,49 @@ static Value table_join_method(ArtState *S, int argc, Value *argv)
 {
     (void)argc;
     Value self = get_this(S);
-    if (!IS_TABLE(self)) return NIL_VAL;
-    if (!IS_STRING(argv[0])) return NIL_VAL;
+    if (!IS_TABLE(self))
+        return NIL_VAL;
+    if (!IS_STRING(argv[0]))
+        return NIL_VAL;
 
     ObjTable *t = AS_TABLE(self);
     ObjString *sep = AS_STRING(argv[0]);
+    int n = t->array_count;
 
-    ObjString *result = obj_string_from_utf8(S, "", 0);
-    GC_PUSH(S, OBJ_VAL(result));
+    if (n == 0)
+        return OBJ_VAL(obj_string_from_utf8(S, "", 0));
 
-    for (int i = 0; i < t->array_count; i++)
+    // Pass 1: stringify each element, sum total length. The
+    // pieces are interned, so they're reachable through
+    // S->strings and can't be collected by pass 2.
+    ObjString **pieces = malloc(sizeof(ObjString *) * n);
+    int total = 0;
+    for (int i = 0; i < n; i++)
     {
+        pieces[i] = value_to_string(S, t->array[i]);
+        total += pieces[i]->unit_count;
         if (i > 0)
-            result = obj_string_concat(S, result, sep);
-
-        ObjString *piece = value_to_string(S, t->array[i]);
-        result = obj_string_concat(S, result, piece);
+            total += sep->unit_count;
     }
 
-    GC_POP(S, 1);
+    // Pass 2: single allocation, copy everything in.
+    uint16_t *buf = malloc(sizeof(uint16_t) * total);
+    int off = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (i > 0)
+        {
+            memcpy(buf + off, sep->chars,
+                   sizeof(uint16_t) * sep->unit_count);
+            off += sep->unit_count;
+        }
+        memcpy(buf + off, pieces[i]->chars,
+               sizeof(uint16_t) * pieces[i]->unit_count);
+        off += pieces[i]->unit_count;
+    }
+    free(pieces);
+
+    ObjString *result = obj_string_take_utf16(S, buf, total);
     return OBJ_VAL(result);
 }
 

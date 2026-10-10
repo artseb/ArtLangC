@@ -226,6 +226,7 @@ static void mark_roots(ArtState *S)
     for (int i = 0; i < S->gc.root_count; i++)
     {
         art_gc_mark_value(S, S->gc.roots[i]);
+        art_gc_mark_value(S, S->thrown_value);
     }
 }
 

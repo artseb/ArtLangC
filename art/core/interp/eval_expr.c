@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 static bool value_in_string(ObjString *needle, ObjString *hay);
 static bool value_in_table(Value v, ObjTable *t);
@@ -23,46 +24,19 @@ Value eval_var(ArtState *S, Node *n)
 {
     VarNode *v = (VarNode *)n;
     Value out;
+
     if (art_scope_lookup(S->scope, v->name, NULL, &out))
         return out;
 
-    // Undefined variables read as nil, matching Lua. But the most
-    // common cause of an undefined read inside a method body is
-    // forgetting `this.`: writing `name` when you meant
-    // `this.name`. When we can tell that's what happened, say so
-    // instead of silently returning nil.
-    //
-    // Outside a method — or when the name doesn't match any member
-    // of the current class — we fall through to nil.
-    ObjString *this_name = obj_string_from_utf8(S, "this", 4);
-    Value this_val;
-    if (art_scope_lookup(S->scope, this_name, NULL, &this_val) &&
-        IS_INSTANCE(this_val))
+    if (S->active_class != NULL)
     {
-        ObjInstance *inst = AS_INSTANCE(this_val);
-        for (ObjClass *c = inst->klass; c != NULL; c = c->superclass)
+        Value this_val;
+        if (art_scope_lookup(S->scope, S->this_name, NULL, &this_val) &&
+            IS_INSTANCE(this_val))
         {
-            for (int i = 0; i < c->field_count; i++)
-            {
-                if (c->fields[i].name == v->name)
-                {
-                    art_runtime_error(S, n,
-                                      "undefined variable '%s' in method body "
-                                      "(did you mean 'this.%s'?)",
-                                      obj_string_to_utf8(v->name),
-                                      obj_string_to_utf8(v->name));
-                }
-            }
-
-            if (table_has(c->methods, v->name) ||
-                table_has(c->getters, v->name))
-            {
-                art_runtime_error(S, n,
-                                  "undefined variable '%s' in method body "
-                                  "(did you mean 'this.%s'?)",
-                                  obj_string_to_utf8(v->name),
-                                  obj_string_to_utf8(v->name));
-            }
+            if (instance_try_get_member(S, AS_INSTANCE(this_val),
+                                        v->name, &out, n))
+                return out;
         }
     }
 
@@ -222,34 +196,39 @@ Value eval_interp(ArtState *S, Node *n)
 {
     InterpNode *in = (InterpNode *)n;
 
-    ObjString *result = NULL;
+    if (in->part_count == 0)
+        return OBJ_VAL(obj_string_from_utf8(S, "", 0));
+
+    // Same two-pass approach as render_table. Each part is
+    // stringified once, collected into an array, then
+    // concatenated in a single allocation. Format specs
+    // (${x:spec}) route through format_value, everything else
+    // through value_to_string.
+    ObjString **pieces = malloc(sizeof(ObjString *) * in->part_count);
 
     for (int i = 0; i < in->part_count; i++)
     {
         Value v = art_eval(S, in->parts[i]);
         if (S->control != CONTROL_NONE)
+        {
+            free(pieces);
             return NIL_VAL;
+        }
 
-        ObjString *s;
         if (in->specs != NULL && in->specs[i] != NULL)
-            s = format_value(S, v, in->specs[i]);
+            pieces[i] = format_value(S, v, in->specs[i]);
         else
-            s = value_to_string(S, v);
+            pieces[i] = value_to_string(S, v);
 
-        // format_value can raise on a bad spec; the control
-        // flag is the signal that we should unwind.
         if (S->control != CONTROL_NONE)
+        {
+            free(pieces);
             return NIL_VAL;
-
-        if (result == NULL)
-            result = s;
-        else
-            result = obj_string_concat(S, result, s);
+        }
     }
 
-    if (result == NULL)
-        result = obj_string_from_utf8(S, "", 0);
-
+    ObjString *result = obj_string_concat_all(S, pieces, in->part_count);
+    free(pieces);
     return OBJ_VAL(result);
 }
 
