@@ -182,6 +182,8 @@ Value eval_class_decl(ArtState *S, Node *n)
         GC_POP(S, 1);
     }
 
+    class_register_reflection(S, klass);
+
     if (c->implements_count > 0)
     {
         klass->interfaces = malloc(sizeof(ObjInterface *) * c->implements_count);

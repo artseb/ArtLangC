@@ -612,11 +612,13 @@ the scope chain, so a helper function named `fetch` in an
 outer scope takes precedence over a method named `fetch` on
 the receiver.
 
-Private fields with `local`:
+Private members with `local`. The rule applies to fields,
+methods, and getters alike:
 
 ```art
 class Counter {
     local count = 0
+    local fun internalReset() { this.count = 0 }
 
     fun Counter() { }
     fun bump() { this.count = this.count + 1 }
@@ -626,10 +628,86 @@ class Counter {
 local c = Counter()
 c.bump()
 c.value                          // 1
+
 c.count                          // ERROR: field is private
+c.internalReset()                // ERROR: method is private
 ```
 
+`local fun` on a method makes it private, callable from
+within the class, invisible from outside. Same privacy
+checks the field path uses.
 
+Reflection respects privacy too: `c.fields()` does not list
+`count` or `internalReset`, and `c.get("count")` from
+outside the class errors.
+
+### Reflection
+
+Instances expose three methods for walking their members
+dynamically.
+
+`obj.fields()` returns an array of the accessible member
+names — fields, getters, and methods from this class and
+every superclass. Private members (declared with `local`)
+and static members are excluded. Duplicates across the
+inheritance chain are collapsed to one entry.
+
+```art
+class Entity {
+    name = "goblin"
+    hp = 30
+    fun Entity() { }
+    fun takeDamage(n) { this.hp = this.hp - n }
+    local fun internalTick() { return 0 }
+}
+
+local e = Entity()
+e.fields()             // ["name", "hp", "takeDamage"] — any order
+```
+
+`obj.get(name)` reads a member by name. Fields return their
+value, getters are invoked, methods return a bound method
+you can call.
+
+```art
+e.get("name")                    // "goblin"
+e.get("hp")                      // 30
+e.get("takeDamage")(5)           // calls the method
+e.get("hp")                      // 25
+```
+
+`obj.set(name, value)` writes a field or invokes a setter.
+
+```art
+e.set("name", "orc")
+e.set("hp", 50)
+e.name                           // "orc"
+```
+
+Private members are not accessible through reflection from
+outside the class. Inside a method, the class's own private
+members can be reached via `this.get("...")` and
+`this.set("...", ...)`.
+
+A user-defined `fun fields()`, `fun get()`, or `fun set()`
+on a class overrides the built-in for that class.
+
+Reflection is what makes recursive serialization possible:
+
+```art
+fun dump(obj, indent) {
+    local pad = " " * indent
+    for (local name in obj.fields()) {
+        local v = obj.get(name)
+        if (v is Entity) {
+            print(pad + name + ":")
+            dump(v, indent + 2)
+        } else {
+            print(pad + name + " = " + tostring(v))
+        }
+    }
+}
+```
 
 ## Getters and setters
 

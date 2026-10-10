@@ -1,15 +1,28 @@
 // ============================================================
 // eval_call.c — function declaration, closure calls, call site
-//
-// The calling convention lives in core because every line of it
-// touches interpreter state: scopes, call frames, control flow.
-// See core/interp/README.md.
 // ============================================================
 
 #include "interp.h"
 #include "scope.h"
 
 #define MAX_ARGS 64
+
+static void native_frame_push(ArtState *S, Node *at)
+{
+    if (S->frame_count >= ART_FRAMES_MAX)
+        return;
+
+    S->frames[S->frame_count].closure = NULL;
+    S->frames[S->frame_count].call_site = at;
+    S->frames[S->frame_count].file_name = S->current_file;
+    S->frame_count++;
+}
+
+static void native_frame_pop(ArtState *S)
+{
+    if (S->frame_count > 0)
+        S->frame_count--;
+}
 
 Value call_native_method(ArtState *S, ObjNative *nat, Value this_val,
                          int argc, Value *args, Node *at)
@@ -26,9 +39,9 @@ Value call_native_method(ArtState *S, ObjNative *nat, Value this_val,
 
     art_scope_declare(S, S->scope, S->this_name, this_val);
 
-    S->frame_count++;
+    native_frame_push(S, at);
     Value result = nat->fn(S, argc, args);
-    S->frame_count--;
+    native_frame_pop(S);
 
     S->scope = saved;
     return result;

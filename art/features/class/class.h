@@ -45,6 +45,7 @@ Value instance_get_member(ArtState *S, ObjInstance *inst,
                           ObjString *name, Node *at);
 Value instance_set_member(ArtState *S, ObjInstance *inst,
                           ObjString *name, Value v, Node *at);
+void class_register_reflection(ArtState *S, ObjClass *klass);
 bool instance_try_get_member(ArtState *S, ObjInstance *inst,
                              ObjString *name, Value *out, Node *at);
 

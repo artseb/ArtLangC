@@ -130,7 +130,18 @@ Node *class_parse(Parser *P)
             mname = obj_string_from_utf8(P->state, mn.start, mn.length);
         }
 
-        parser_consume(P, TOKEN_LEFT_PAREN, "expected '(' after method name");
+        bool has_paren = false;
+        if (parser_check(P, TOKEN_LEFT_PAREN))
+        {
+            parser_advance(P);
+            has_paren = true;
+        }
+        else if (!is_get)
+        {
+            parser_error(P, "expected '(' after method name");
+            parser_synchronize(P);
+            continue;
+        }
 
         int pcap = 4, pcount = 0;
         ObjString **pnames = NULL;
@@ -138,7 +149,7 @@ Node *class_parse(Parser *P)
         Node **pdefs = NULL;
         bool variadic = false;
 
-        if (!parser_check(P, TOKEN_RIGHT_PAREN))
+        if (has_paren && !parser_check(P, TOKEN_RIGHT_PAREN))
         {
             pnames = malloc(sizeof(ObjString *) * pcap);
             ptypes = malloc(sizeof(ObjString *) * pcap);
@@ -201,7 +212,9 @@ Node *class_parse(Parser *P)
             }
         }
 
-        parser_consume(P, TOKEN_RIGHT_PAREN, "expected ')' after parameters");
+        if (has_paren)
+            parser_consume(P, TOKEN_RIGHT_PAREN,
+                           "expected ')' after parameters");
 
         ObjFunction *fn = parse_function_body(P, mname, pnames, pcount, variadic);
         if (fn != NULL)
